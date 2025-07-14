@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">שקובה</string>
+    <string name="start_game">התחל משחק</string>
+    <string name="options">אפשרויות</string>
+    <string name="exit">יציאה</string>
+    <string name="main_menu">תפריט ראשי</string>
+    <string name="back_to_game">חזרה למשחק</string>
+    <string name="game_menu">תפריט משחק</string>
+    <string name="dark_mode">מצב כהה</string>
+    <string name="back">חזור</string>
+    <string name="shkuba_card_game">משחק קלפים שקובה</string>
+    <string name="table">שולחן:</string>
+    <string name="your_hand">היד שלך:</string>
+    <string name="play_card">שחק קלף</string>
+    <string name="current_player">שחקן נוכחי: %1$s</string>
+    <string name="language">שפה</string>
+</resources>

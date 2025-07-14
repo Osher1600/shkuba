@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Shkuba</string>
+    <string name="start_game">Start Game</string>
+    <string name="options">Options</string>
+    <string name="exit">Exit</string>
+    <string name="main_menu">Main Menu</string>
+    <string name="back_to_game">Back to Game</string>
+    <string name="game_menu">Game Menu</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="back">Back</string>
+    <string name="shkuba_card_game">Shkuba Card Game</string>
+    <string name="table">Table:</string>
+    <string name="your_hand">Your Hand:</string>
+    <string name="play_card">Play Card</string>
+    <string name="current_player">Current Player: %1$s</string>
+    <string name="language">Language</string>
+</resources>
