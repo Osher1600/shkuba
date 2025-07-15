@@ -1,8 +1,6 @@
 package com.shkuba
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.foundation.ScrollState
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -11,30 +9,20 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.horizontalScroll
-
-// Define missing constants
-val TextPrimaryLight = Color.Black
-val SurfaceLight = Color.White
-val BackgroundLight = Color.LightGray
-val Primary = Color.Blue
-val PrimaryLight = Color.Cyan
-val AccentOrange = Color(0xFFFFA500)
-val AccentGreen = Color(0xFF00FF00)
-val CardBorderLight = Color.Gray
+import com.shkuba.ui.theme.CardBorderLight
 
 // Data models
 sealed class Suit(val symbol: String) {
@@ -129,7 +117,7 @@ fun GameScreen(gameState: GameState, onPlayCard: (Card) -> Unit) {
                     fontWeight = FontWeight.Bold,
                     fontSize = 28.sp
                 ),
-                color = TextPrimaryLight,
+                color = cardTextPrimary(),
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
 
@@ -140,7 +128,7 @@ fun GameScreen(gameState: GameState, onPlayCard: (Card) -> Unit) {
                     .padding(vertical = 16.dp)
                     .shadow(8.dp, RoundedCornerShape(16.dp)),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = SurfaceLight)
+                colors = CardDefaults.cardColors(containerColor = cardSurface())
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -151,7 +139,7 @@ fun GameScreen(gameState: GameState, onPlayCard: (Card) -> Unit) {
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.SemiBold
                         ),
-                        color = TextPrimaryLight
+                        color = cardTextPrimary()
                     )
                     Row(
                         modifier = Modifier
@@ -173,7 +161,7 @@ fun GameScreen(gameState: GameState, onPlayCard: (Card) -> Unit) {
                     .padding(vertical = 16.dp)
                     .shadow(8.dp, RoundedCornerShape(16.dp)),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = SurfaceLight)
+                colors = CardDefaults.cardColors(containerColor = cardSurface())
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -184,7 +172,7 @@ fun GameScreen(gameState: GameState, onPlayCard: (Card) -> Unit) {
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.SemiBold
                         ),
-                        color = TextPrimaryLight
+                        color = cardTextPrimary()
                     )
                     Row(
                         modifier = Modifier
@@ -247,7 +235,7 @@ fun MainMenu(
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        BackgroundLight,
+                        cardBackground(),
                         Color(0xFFE8F0FE)
                     )
                 )
@@ -267,7 +255,7 @@ fun MainMenu(
                     fontSize = 42.sp,
                     letterSpacing = (-1).sp
                 ),
-                color = TextPrimaryLight
+                color = cardTextPrimary()
             )
             Spacer(modifier = Modifier.height(48.dp))
 
@@ -275,7 +263,7 @@ fun MainMenu(
                 text = startGameLabel,
                 onClick = onStartGame,
                 gradient = Brush.horizontalGradient(
-                    colors = listOf(Primary, PrimaryLight)
+                    colors = listOf(cardPrimary(), cardPrimaryLight())
                 )
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -283,7 +271,7 @@ fun MainMenu(
                 text = optionsLabel,
                 onClick = onOptions,
                 gradient = Brush.horizontalGradient(
-                    colors = listOf(AccentOrange, AccentOrange.copy(alpha = 0.8f))
+                    colors = listOf(cardAccentOrange(), cardAccentOrange().copy(alpha = 0.8f))
                 )
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -366,7 +354,7 @@ fun InGameMenu(
                 .clickable(enabled = false) { },
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
-                containerColor = SurfaceLight
+                containerColor = cardSurface()
             )
         ) {
             Column(
@@ -378,7 +366,7 @@ fun InGameMenu(
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Bold
                     ),
-                    color = TextPrimaryLight
+                    color = cardTextPrimary()
                 )
                 Spacer(modifier = Modifier.height(32.dp))
 
@@ -386,7 +374,7 @@ fun InGameMenu(
                     text = mainMenuLabel,
                     onClick = onMainMenu,
                     gradient = Brush.horizontalGradient(
-                        colors = listOf(Primary, PrimaryLight)
+                        colors = listOf(cardPrimary(), cardPrimaryLight())
                     )
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -394,7 +382,7 @@ fun InGameMenu(
                     text = optionsLabel,
                     onClick = onOptions,
                     gradient = Brush.horizontalGradient(
-                        colors = listOf(AccentOrange, AccentOrange.copy(alpha = 0.8f))
+                        colors = listOf(cardAccentOrange(), cardAccentOrange().copy(alpha = 0.8f))
                     )
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -402,7 +390,7 @@ fun InGameMenu(
                     text = backToGameLabel,
                     onClick = onBackToGame,
                     gradient = Brush.horizontalGradient(
-                        colors = listOf(AccentGreen, AccentGreen.copy(alpha = 0.8f))
+                        colors = listOf(cardAccentGreen(), cardAccentGreen().copy(alpha = 0.8f))
                     )
                 )
             }
@@ -419,14 +407,15 @@ fun OptionsScreen(
     onLanguageChange: (String) -> Unit,
     languageOptions: List<String>
 ) {
+    val colorScheme = MaterialTheme.colorScheme
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        BackgroundLight,
-                        Color(0xFFE8F0FE)
+                        colorScheme.background,
+                        colorScheme.surface
                     )
                 )
             )
@@ -438,13 +427,13 @@ fun OptionsScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                "Options",
+                stringResource(id = R.string.options),
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 36.sp,
                     letterSpacing = (-0.5).sp
                 ),
-                color = TextPrimaryLight
+                color = colorScheme.onBackground
             )
             Spacer(modifier = Modifier.height(48.dp))
 
@@ -455,7 +444,7 @@ fun OptionsScreen(
                     .padding(vertical = 8.dp)
                     .shadow(4.dp, RoundedCornerShape(16.dp)),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = SurfaceLight)
+                colors = CardDefaults.cardColors(containerColor = colorScheme.surface)
             ) {
                 Row(
                     modifier = Modifier
@@ -465,18 +454,18 @@ fun OptionsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "Dark Mode",
+                        stringResource(id = R.string.dark_mode),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.SemiBold
                         ),
-                        color = TextPrimaryLight
+                        color = colorScheme.onSurface
                     )
                     Switch(
                         checked = isDarkMode,
                         onCheckedChange = { onToggleTheme() },
                         colors = SwitchDefaults.colors(
-                            checkedThumbColor = Primary,
-                            checkedTrackColor = PrimaryLight.copy(alpha = 0.5f),
+                            checkedThumbColor = colorScheme.primary,
+                            checkedTrackColor = colorScheme.primary.copy(alpha = 0.5f),
                             uncheckedThumbColor = Color.Gray,
                             uncheckedTrackColor = Color.LightGray
                         )
@@ -493,7 +482,7 @@ fun OptionsScreen(
                     .padding(vertical = 8.dp)
                     .shadow(4.dp, RoundedCornerShape(16.dp)),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = SurfaceLight)
+                colors = CardDefaults.cardColors(containerColor = colorScheme.surface)
             ) {
                 Column(
                     modifier = Modifier
@@ -502,11 +491,11 @@ fun OptionsScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        "Language",
+                        stringResource(id = R.string.language),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.SemiBold
                         ),
-                        color = TextPrimaryLight
+                        color = colorScheme.onSurface
                     )
                     languageOptions.forEach { lang ->
                         val isSelected = lang == selectedLanguage
@@ -515,12 +504,12 @@ fun OptionsScreen(
                                 .fillMaxWidth()
                                 .height(48.dp)
                                 .background(
-                                    if (isSelected) Primary else Color.Transparent,
+                                    if (isSelected) colorScheme.primary else Color.Transparent,
                                     RoundedCornerShape(24.dp)
                                 )
                                 .border(
                                     width = 1.dp,
-                                    color = if (isSelected) Primary else CardBorderLight,
+                                    color = if (isSelected) colorScheme.primary else colorScheme.outline,
                                     shape = RoundedCornerShape(24.dp)
                                 )
                                 .clickable { onLanguageChange(lang) }
@@ -529,7 +518,7 @@ fun OptionsScreen(
                         ) {
                             Text(
                                 lang,
-                                color = if (isSelected) Color.White else TextPrimaryLight,
+                                color = if (isSelected) colorScheme.onPrimary else colorScheme.onSurface,
                                 style = MaterialTheme.typography.bodyLarge.copy(
                                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
                                 )
@@ -542,12 +531,27 @@ fun OptionsScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             MenuButton(
-                text = "Back",
+                text = stringResource(id = R.string.back),
                 onClick = onBack,
                 gradient = Brush.horizontalGradient(
-                    colors = listOf(AccentGreen, AccentGreen.copy(alpha = 0.8f))
+                    colors = listOf(colorScheme.secondary, colorScheme.secondary.copy(alpha = 0.8f))
                 )
             )
         }
     }
 }
+
+@Composable
+fun cardTextPrimary() = MaterialTheme.colorScheme.onSurface
+@Composable
+fun cardSurface() = MaterialTheme.colorScheme.surface
+@Composable
+fun cardBackground() = MaterialTheme.colorScheme.background
+@Composable
+fun cardPrimary() = MaterialTheme.colorScheme.primary
+@Composable
+fun cardPrimaryLight() = MaterialTheme.colorScheme.primaryContainer
+@Composable
+fun cardAccentOrange() = MaterialTheme.colorScheme.secondary
+@Composable
+fun cardAccentGreen() = MaterialTheme.colorScheme.tertiary

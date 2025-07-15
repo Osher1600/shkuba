@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -20,25 +21,37 @@ import androidx.compose.ui.unit.dp
 import com.shkuba.ui.theme.ShkubaTheme
 import java.util.Locale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.CompositionLocalProvider
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            ShkubaTheme {
-                MainScreen(onExit = { finish() })
+            val isDarkMode = remember { mutableStateOf(false) }
+            val localeState = remember { mutableStateOf(Locale.getDefault()) }
+            val context = LocalContext.current
+            val config = Configuration(context.resources.configuration)
+            config.setLocale(localeState.value)
+            val localizedContext = context.createConfigurationContext(config)
+            CompositionLocalProvider(LocalContext provides localizedContext) {
+                ShkubaTheme(darkTheme = isDarkMode.value, dynamicColor = false) {
+                    MainScreen(
+                        onExit = { finish() },
+                        isDarkMode = isDarkMode,
+                        localeState = localeState
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun MainScreen(onExit: () -> Unit) {
+fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeState: MutableState<Locale>) {
     val context = LocalContext.current
     val showMenu = remember { mutableStateOf(true) }
     val showOptions = remember { mutableStateOf(false) }
-    val isDarkMode = remember { mutableStateOf(false) }
     val gameState = remember {
         mutableStateOf(
             GameState(
@@ -55,29 +68,27 @@ fun MainScreen(onExit: () -> Unit) {
         "Hebrew" to Locale("iw"),
         "Hindi" to Locale("hi")
     )
-    val currentLocale = Locale.getDefault()
     val selectedLanguage = remember { mutableStateOf(
-        languageToLocale.entries.find { it.value.language == currentLocale.language }?.key ?: "English"
+        languageToLocale.entries.find { it.value.language == localeState.value.language }?.key ?: "English"
     ) }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         when {
             showOptions.value -> {
-                OptionsScreen(
-                    isDarkMode = isDarkMode.value,
-                    onToggleTheme = { isDarkMode.value = !isDarkMode.value },
-                    onBack = { showOptions.value = false },
-                    selectedLanguage = selectedLanguage.value,
-                    onLanguageChange = { lang: String ->
-                        selectedLanguage.value = lang
-                        val locale = languageToLocale[lang] ?: Locale("en")
-                        val resources = context.resources
-                        val config = Configuration(resources.configuration)
-                        config.setLocale(locale)
-                        context.createConfigurationContext(config)
-                    },
-                    languageOptions = supportedLanguages
-                )
+                androidx.compose.runtime.key(localeState.value) {
+                    OptionsScreen(
+                        isDarkMode = isDarkMode.value,
+                        onToggleTheme = { isDarkMode.value = !isDarkMode.value },
+                        onBack = { showOptions.value = false },
+                        selectedLanguage = selectedLanguage.value,
+                        onLanguageChange = { lang: String ->
+                            selectedLanguage.value = lang
+                            val locale = languageToLocale[lang] ?: Locale("en")
+                            localeState.value = locale
+                        },
+                        languageOptions = supportedLanguages
+                    )
+                }
             }
             showMenu.value -> {
                 MainMenu(
