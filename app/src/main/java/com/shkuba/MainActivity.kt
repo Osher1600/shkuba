@@ -1,4 +1,4 @@
-package com.shkuba
+package com.dinari.shkuba
 
 import android.content.res.Configuration
 import android.os.Bundle
@@ -7,7 +7,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,6 +21,9 @@ import com.shkuba.ui.theme.ShkubaTheme
 import java.util.Locale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.key
+import com.dinari.shkuba.ui.PvpPlayerListScreen
+import com.shkuba.network.NetworkService
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,6 +46,8 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        // Example: Connect player with a hardcoded name
+        NetworkService.connectPlayer("Player1")
     }
 }
 
@@ -62,6 +66,7 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
         )
     }
     val showInGameMenu = remember { mutableStateOf(false) }
+    val showPvpList = remember { mutableStateOf(false) }
     val supportedLanguages = listOf("English", "Hebrew", "Hindi")
     val languageToLocale = mapOf(
         "English" to Locale("en"),
@@ -75,7 +80,7 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
     Surface(modifier = Modifier.fillMaxSize()) {
         when {
             showOptions.value -> {
-                androidx.compose.runtime.key(localeState.value) {
+                key(localeState.value) {
                     OptionsScreen(
                         isDarkMode = isDarkMode.value,
                         onToggleTheme = { isDarkMode.value = !isDarkMode.value },
@@ -89,6 +94,9 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
                         languageOptions = supportedLanguages
                     )
                 }
+            }
+            showPvpList.value -> {
+                PvpPlayerListScreen(onBack = { showPvpList.value = false; showMenu.value = true })
             }
             showMenu.value -> {
                 MainMenu(
@@ -113,6 +121,7 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
                     },
                     onOptions = { showOptions.value = true },
                     onExit = onExit,
+                    onPvp = { showMenu.value = false; showPvpList.value = true },
                     startGameLabel = stringResource(R.string.start_game),
                     optionsLabel = stringResource(R.string.options),
                     exitLabel = stringResource(R.string.exit),

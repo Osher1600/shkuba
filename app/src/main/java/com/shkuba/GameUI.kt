@@ -1,4 +1,4 @@
-package com.shkuba
+package com.dinari.shkuba
 
 
 import androidx.compose.foundation.background
@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.horizontalScroll
-import com.shkuba.ui.theme.CardBorderLight
+import com.dinari.shkuba.R
 
 // Data models
 sealed class Suit(val symbol: String) {
@@ -224,6 +224,7 @@ fun MainMenu(
     onStartGame: () -> Unit,
     onOptions: () -> Unit,
     onExit: () -> Unit,
+    onPvp: () -> Unit,
     startGameLabel: String,
     optionsLabel: String,
     exitLabel: String,
@@ -280,6 +281,14 @@ fun MainMenu(
                 onClick = onExit,
                 gradient = Brush.horizontalGradient(
                     colors = listOf(Color(0xFF6C757D), Color(0xFF495057))
+                )
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            MenuButton(
+                text = stringResource(id = R.string.pvp),
+                onClick = onPvp,
+                gradient = Brush.horizontalGradient(
+                    colors = listOf(cardAccentGreen(), cardAccentGreen().copy(alpha = 0.8f))
                 )
             )
         }
