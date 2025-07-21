@@ -14,3 +14,9 @@
 .cxx
 local.properties
 app/google-services.json
+*.db
+*.ipch
+logic/x64/
+logic/.vs/shkuba/CopilotIndices/
+logic/.vs/
+
