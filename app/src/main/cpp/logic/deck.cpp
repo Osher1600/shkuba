@@ -1,10 +1,13 @@
 #include "deck.h"
 
+const int CARDS_RANGE = 10;
+const int CARD_RANKS = 4;
+
 Deck::Deck()
 {
-	for (int i = 1; 1 <= i <= 10; ++i)
+	for (int i = 0; i < CARDS_RANGE; ++i)
 	{
-		for (int j = 0; j < 4; ++j)
+		for (int j = 0; j < CARD_RANKS; ++j)
 		{
 			Card::suit mySuit = static_cast<Card::suit>(j);
 			cards.push_back(Card(mySuit, i));

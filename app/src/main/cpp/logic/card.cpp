@@ -15,7 +15,4 @@ int Card::getRank() const
     return m_rank;
 }
 
-//bool Card::operator==(const Card& other) const
-//{
-//    return this->m_rank == other.m_rank && this->m_suit == other.m_suit;
-//}
+

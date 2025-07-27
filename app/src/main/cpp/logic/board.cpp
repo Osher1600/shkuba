@@ -1,6 +1,6 @@
 #include "board.h"
 
-Board::Board() : cardsOnBoard()//, p1Shkuba(0),p2Shkuba(0)
+Board::Board() : cardsOnBoard()
 {
 }
 
