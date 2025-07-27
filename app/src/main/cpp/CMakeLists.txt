@@ -16,6 +16,7 @@ add_library(
     logic/deck.cpp
     logic/hand.cpp
     logic/pile.cpp
+    logic/gameBot.cpp
 )
 
 # Find required libraries

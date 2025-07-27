@@ -76,6 +76,17 @@ JNIEXPORT jintArray JNICALL Java_com_dinari_shkuba_Board_getBoard(JNIEnv* env, j
     return env->NewIntArray(0);
 }
 
+JNIEXPORT jint JNICALL Java_com_dinari_shkuba_Board_getBoardSizeNative(JNIEnv* env, jobject thiz) {
+    jclass cls = env->GetObjectClass(thiz);
+    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jlong handle = env->GetLongField(thiz, handleField);
+    Board* board = reinterpret_cast<Board*>(handle);
+    if (board) {
+        return static_cast<jint>(board->getBoardSize());
+    }
+    return 0;
+}
+
 // Card JNI Methods
 JNIEXPORT jlong JNICALL Java_com_dinari_shkuba_Card_nativeCreate(JNIEnv* env, jobject thiz, jint suit, jint rank) {
     try {
