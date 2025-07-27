@@ -64,7 +64,14 @@ fun CardView(
 ) {
     Card(
         modifier = Modifier
-            .size(70.dp, 100.dp),
+            .size(70.dp, 100.dp)
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable { onClick() }
+                } else {
+                    Modifier
+                }
+            ),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
@@ -132,6 +139,74 @@ fun GameScreen(gameState: GameState, onPlayCard: (Card) -> Unit) {
                 color = TextPrimaryLight,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
+            
+            // Opponent's hand section (show face down cards)
+            if (gameState.players.size > 1) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                        .shadow(8.dp, RoundedCornerShape(16.dp)),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = SurfaceLight)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            "${gameState.players[1].name}'s Hand (${gameState.players[1].hand.size} cards)",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = TextPrimaryLight
+                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            repeat(gameState.players[1].hand.size) {
+                                // Show face down cards
+                                Box(
+                                    modifier = Modifier
+                                        .size(70.dp, 100.dp)
+                                        .background(
+                                            Color(0xFF6C5CE7),
+                                            RoundedCornerShape(12.dp)
+                                        )
+                                        .border(
+                                            width = 1.dp,
+                                            color = Color.Gray,
+                                            shape = RoundedCornerShape(12.dp)
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        "?",
+                                        style = MaterialTheme.typography.headlineLarge.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 32.sp
+                                        ),
+                                        color = Color.White
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Current player indicator
+            Text(
+                "Current Player: ${gameState.players[gameState.currentPlayerIndex].name}",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.SemiBold
+                ),
+                color = if (gameState.currentPlayerIndex == 0) AccentGreen else AccentOrange,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
 
             // Table section
             Card(
@@ -186,17 +261,31 @@ fun GameScreen(gameState: GameState, onPlayCard: (Card) -> Unit) {
                         ),
                         color = TextPrimaryLight
                     )
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        gameState.players[gameState.currentPlayerIndex].hand.forEach { card ->
-                            CardView(
-                                card = card,
-                                onClick = { onPlayCard(card) }
-                            )
+                    
+                    // Check if game is over
+                    val currentPlayerHand = gameState.players[gameState.currentPlayerIndex].hand
+                    if (currentPlayerHand.isEmpty()) {
+                        Text(
+                            "🎉 ${gameState.players[gameState.currentPlayerIndex].name} Wins! 🎉",
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = AccentGreen,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
+                    } else {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            currentPlayerHand.forEach { card ->
+                                CardView(
+                                    card = card,
+                                    onClick = if (gameState.currentPlayerIndex == 0) { { onPlayCard(card) } } else null
+                                )
+                            }
                         }
                     }
                 }

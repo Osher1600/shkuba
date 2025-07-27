@@ -88,7 +88,12 @@ fun MainScreen(onExit: () -> Unit) {
                             Card("K", Suit.Clubs),
                             Card("3", Suit.Hearts)
                         ))
-                        val opponent = Player("Opponent", listOf())
+                        val opponent = Player("Opponent", listOf(
+                            Card("Q", Suit.Spades),
+                            Card("9", Suit.Hearts),
+                            Card("J", Suit.Clubs),
+                            Card("5", Suit.Diamonds)
+                        ))
                         val tableCards = listOf(
                             Card("2", Suit.Spades),
                             Card("J", Suit.Diamonds)
@@ -127,7 +132,53 @@ fun MainScreen(onExit: () -> Unit) {
             }
             else -> {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    GameScreen(gameState = gameState.value, onPlayCard = { /* TODO: Play card logic */ })
+                    GameScreen(gameState = gameState.value, onPlayCard = { card ->
+                        // Implement card playing logic
+                        val currentPlayer = gameState.value.players[gameState.value.currentPlayerIndex]
+                        val updatedHand = currentPlayer.hand.toMutableList()
+                        
+                        // Remove the played card from player's hand
+                        if (updatedHand.remove(card)) {
+                            val updatedPlayer = currentPlayer.copy(hand = updatedHand)
+                            val updatedPlayers = gameState.value.players.toMutableList()
+                            updatedPlayers[gameState.value.currentPlayerIndex] = updatedPlayer
+                            
+                            // Add the card to the table
+                            val updatedTableCards = gameState.value.tableCards + card
+                            
+                            // Switch to next player
+                            val nextPlayerIndex = (gameState.value.currentPlayerIndex + 1) % gameState.value.players.size
+                            
+                            // Update game state
+                            gameState.value = gameState.value.copy(
+                                players = updatedPlayers,
+                                tableCards = updatedTableCards,
+                                currentPlayerIndex = nextPlayerIndex
+                            )
+                            
+                            // Simple AI: if it's the opponent's turn and they have cards, play one automatically
+                            if (nextPlayerIndex != 0 && gameState.value.players[nextPlayerIndex].hand.isNotEmpty()) {
+                                val aiPlayer = gameState.value.players[nextPlayerIndex]
+                                val cardToPlay = aiPlayer.hand.first() // Play the first card
+                                val aiUpdatedHand = aiPlayer.hand.drop(1)
+                                val aiUpdatedPlayer = aiPlayer.copy(hand = aiUpdatedHand)
+                                val aiUpdatedPlayers = gameState.value.players.toMutableList()
+                                aiUpdatedPlayers[nextPlayerIndex] = aiUpdatedPlayer
+                                
+                                // Add AI card to table
+                                val aiUpdatedTableCards = gameState.value.tableCards + cardToPlay
+                                
+                                // Switch back to player
+                                val playerIndex = (nextPlayerIndex + 1) % gameState.value.players.size
+                                
+                                gameState.value = gameState.value.copy(
+                                    players = aiUpdatedPlayers,
+                                    tableCards = aiUpdatedTableCards,
+                                    currentPlayerIndex = playerIndex
+                                )
+                            }
+                        }
+                    })
                     Button(
                         onClick = { showInGameMenu.value = true },
                         modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
