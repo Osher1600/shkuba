@@ -14,5 +14,6 @@
     <string name="play_card">कार्ड खेलें</string>
     <string name="current_player">वर्तमान खिलाड़ी: %1$s</string>
     <string name="language">भाषा</string>
+    <string name="pvp">PVP</string>
     <string name="no_players_available">कोई खिलाड़ी उपलब्ध नहीं है</string>
 </resources>

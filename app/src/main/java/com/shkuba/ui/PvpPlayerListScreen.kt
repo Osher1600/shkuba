@@ -1,4 +1,4 @@
-package com.dinari.shkuba.ui
+package com.shkuba.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

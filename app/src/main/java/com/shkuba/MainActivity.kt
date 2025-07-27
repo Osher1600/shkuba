@@ -1,4 +1,4 @@
-package com.dinari.shkuba
+package com.shkuba
 
 import android.content.res.Configuration
 import android.os.Bundle
@@ -22,7 +22,17 @@ import java.util.Locale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.key
-import com.dinari.shkuba.ui.PvpPlayerListScreen
+import com.dinari.shkuba.Board
+import com.dinari.shkuba.CardGui
+import com.dinari.shkuba.GameScreen
+import com.dinari.shkuba.GameState
+import com.dinari.shkuba.InGameMenu
+import com.dinari.shkuba.MainMenu
+import com.dinari.shkuba.OptionsScreen
+import com.dinari.shkuba.Player
+import com.dinari.shkuba.R
+import com.dinari.shkuba.Suit
+import com.shkuba.ui.PvpPlayerListScreen
 import com.shkuba.network.NetworkService
 
 class MainActivity : ComponentActivity() {
@@ -37,7 +47,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val isDarkMode = remember { mutableStateOf(false) }
-            val board = Board();
+            val board = Board()
             val localeState = remember { mutableStateOf(Locale.getDefault()) }
             val context = LocalContext.current
             val config = Configuration(context.resources.configuration)
@@ -60,7 +70,6 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeState: MutableState<Locale>) {
-    val context = LocalContext.current
     val showMenu = remember { mutableStateOf(true) }
     val showOptions = remember { mutableStateOf(false) }
     val gameState = remember {
