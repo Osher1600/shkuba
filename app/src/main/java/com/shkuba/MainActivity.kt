@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.shkuba.ui.theme.ShkubaTheme
 import java.util.Locale
 import androidx.compose.ui.platform.LocalContext
+import com.shkuba.native.GameEngine
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,6 +40,7 @@ fun MainScreen(onExit: () -> Unit) {
     val showMenu = remember { mutableStateOf(true) }
     val showOptions = remember { mutableStateOf(false) }
     val isDarkMode = remember { mutableStateOf(false) }
+    val gameEngine = remember { GameEngine() }
     val gameState = remember {
         mutableStateOf(
             GameState(
@@ -82,26 +84,16 @@ fun MainScreen(onExit: () -> Unit) {
             showMenu.value -> {
                 MainMenu(
                     onStartGame = {
-                        val player = Player("You", listOf(
-                            Card("A", Suit.Spades),
-                            Card("7", Suit.Diamonds),
-                            Card("K", Suit.Clubs),
-                            Card("3", Suit.Hearts)
-                        ))
-                        val opponent = Player("Opponent", listOf(
-                            Card("Q", Suit.Spades),
-                            Card("9", Suit.Hearts),
-                            Card("J", Suit.Clubs),
-                            Card("5", Suit.Diamonds)
-                        ))
-                        val tableCards = listOf(
-                            Card("2", Suit.Spades),
-                            Card("J", Suit.Diamonds)
-                        )
+                        // Initialize the native game engine
+                        val (playerCards, aiCards, tableCards) = gameEngine.initializeGame()
+                        
+                        val player = Player("You", playerCards)
+                        val opponent = Player("AI Opponent", aiCards)
+                        
                         gameState.value = GameState(
                             players = listOf(player, opponent),
                             tableCards = tableCards,
-                            currentPlayerIndex = 0
+                            currentPlayerIndex = gameEngine.getCurrentPlayer()
                         )
                         showMenu.value = false
                     },
@@ -133,49 +125,35 @@ fun MainScreen(onExit: () -> Unit) {
             else -> {
                 Box(modifier = Modifier.fillMaxSize()) {
                     GameScreen(gameState = gameState.value, onPlayCard = { card ->
-                        // Implement card playing logic
-                        val currentPlayer = gameState.value.players[gameState.value.currentPlayerIndex]
-                        val updatedHand = currentPlayer.hand.toMutableList()
-                        
-                        // Remove the played card from player's hand
-                        if (updatedHand.remove(card)) {
-                            val updatedPlayer = currentPlayer.copy(hand = updatedHand)
-                            val updatedPlayers = gameState.value.players.toMutableList()
-                            updatedPlayers[gameState.value.currentPlayerIndex] = updatedPlayer
+                        // Use native game engine to play the card
+                        if (gameEngine.playCard(card)) {
+                            // Update game state from native engine
+                            val (playerCards, aiCards, tableCards) = gameEngine.getCurrentGameState()
                             
-                            // Add the card to the table
-                            val updatedTableCards = gameState.value.tableCards + card
+                            val player = Player("You", playerCards)
+                            val opponent = Player("AI Opponent", aiCards)
                             
-                            // Switch to next player
-                            val nextPlayerIndex = (gameState.value.currentPlayerIndex + 1) % gameState.value.players.size
-                            
-                            // Update game state
-                            gameState.value = gameState.value.copy(
-                                players = updatedPlayers,
-                                tableCards = updatedTableCards,
-                                currentPlayerIndex = nextPlayerIndex
+                            gameState.value = GameState(
+                                players = listOf(player, opponent),
+                                tableCards = tableCards,
+                                currentPlayerIndex = gameEngine.getCurrentPlayer()
                             )
                             
-                            // Simple AI: if it's the opponent's turn and they have cards, play one automatically
-                            if (nextPlayerIndex != 0 && gameState.value.players[nextPlayerIndex].hand.isNotEmpty()) {
-                                val aiPlayer = gameState.value.players[nextPlayerIndex]
-                                val cardToPlay = aiPlayer.hand.first() // Play the first card
-                                val aiUpdatedHand = aiPlayer.hand.drop(1)
-                                val aiUpdatedPlayer = aiPlayer.copy(hand = aiUpdatedHand)
-                                val aiUpdatedPlayers = gameState.value.players.toMutableList()
-                                aiUpdatedPlayers[nextPlayerIndex] = aiUpdatedPlayer
-                                
-                                // Add AI card to table
-                                val aiUpdatedTableCards = gameState.value.tableCards + cardToPlay
-                                
-                                // Switch back to player
-                                val playerIndex = (nextPlayerIndex + 1) % gameState.value.players.size
-                                
-                                gameState.value = gameState.value.copy(
-                                    players = aiUpdatedPlayers,
-                                    tableCards = aiUpdatedTableCards,
-                                    currentPlayerIndex = playerIndex
-                                )
+                            // Execute AI turn if it's AI's turn
+                            if (gameEngine.getCurrentPlayer() == 1 && !gameEngine.isGameOver()) {
+                                if (gameEngine.executeAITurn()) {
+                                    // Update game state after AI turn
+                                    val (newPlayerCards, newAiCards, newTableCards) = gameEngine.getCurrentGameState()
+                                    
+                                    val newPlayer = Player("You", newPlayerCards)
+                                    val newOpponent = Player("AI Opponent", newAiCards)
+                                    
+                                    gameState.value = GameState(
+                                        players = listOf(newPlayer, newOpponent),
+                                        tableCards = newTableCards,
+                                        currentPlayerIndex = gameEngine.getCurrentPlayer()
+                                    )
+                                }
                             }
                         }
                     })

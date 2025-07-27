@@ -1,0 +1,1 @@
+// Empty pile implementation - placeholder for future features

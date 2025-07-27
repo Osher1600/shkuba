@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.horizontalScroll
+import com.shkuba.native.NativeCard
 
 // Define missing constants
 val TextPrimaryLight = Color.Black
@@ -36,30 +37,39 @@ val AccentOrange = Color(0xFFFFA500)
 val AccentGreen = Color(0xFF00FF00)
 val CardBorderLight = Color.Gray
 
-// Data models
-sealed class Suit(val symbol: String) {
-    object Spades : Suit("♠")
-    object Diamonds : Suit("♦")
-    object Clubs : Suit("♣")
-    object Hearts : Suit("♥")
+// Data models for native integration
+data class GameCard(val suit: Int, val rank: Int) {
+    fun getSuitSymbol(): String = when (suit) {
+        0 -> "♠" // Spades
+        1 -> "♥" // Hearts  
+        2 -> "♦" // Diamonds
+        3 -> "♣" // Clubs
+        else -> "?"
+    }
+    
+    fun getRankString(): String = when (rank) {
+        1 -> "A"
+        11 -> "J"
+        12 -> "Q"
+        13 -> "K"
+        else -> rank.toString()
+    }
+    
+    override fun toString(): String = "${getRankString()}${getSuitSymbol()}"
 }
 
-data class Card(val value: String, val suit: Suit) {
-    override fun toString(): String = "$value${suit.symbol}"
-}
-
-data class Player(val name: String, val hand: List<Card>)
+data class Player(val name: String, val hand: List<GameCard>)
 
 data class GameState(
     val players: List<Player>,
-    val tableCards: List<Card>,
+    val tableCards: List<GameCard>,
     val currentPlayerIndex: Int
 )
 
 // UI Components
 @Composable
 fun CardView(
-    card: Card,
+    card: GameCard,
     onClick: (() -> Unit)? = null
 ) {
     Card(
@@ -92,25 +102,25 @@ fun CardView(
                 modifier = Modifier.padding(4.dp)
             ) {
                 Text(
-                    text = card.value,
+                    text = card.getRankString(),
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 24.sp
                     ),
                     color = when (card.suit) {
-                        is Suit.Hearts, is Suit.Diamonds -> Color(0xFFDC3545)
-                        else -> Color(0xFF212529)
+                        1, 2 -> Color(0xFFDC3545) // Hearts, Diamonds
+                        else -> Color(0xFF212529) // Spades, Clubs
                     }
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = card.suit.symbol,
+                    text = card.getSuitSymbol(),
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontSize = 20.sp
                     ),
                     color = when (card.suit) {
-                        is Suit.Hearts, is Suit.Diamonds -> Color(0xFFDC3545)
-                        else -> Color(0xFF212529)
+                        1, 2 -> Color(0xFFDC3545) // Hearts, Diamonds
+                        else -> Color(0xFF212529) // Spades, Clubs
                     }
                 )
             }
@@ -119,7 +129,7 @@ fun CardView(
 }
 
 @Composable
-fun GameScreen(gameState: GameState, onPlayCard: (Card) -> Unit) {
+fun GameScreen(gameState: GameState, onPlayCard: (GameCard) -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -295,7 +305,7 @@ fun GameScreen(gameState: GameState, onPlayCard: (Card) -> Unit) {
 }
 
 @Composable
-fun TableView(cards: List<Card>) {
+fun TableView(cards: List<GameCard>) {
     Column {
         Text("Table:", style = MaterialTheme.typography.titleMedium)
         Row {
@@ -308,7 +318,7 @@ fun TableView(cards: List<Card>) {
 }
 
 @Composable
-fun PlayerHandView(player: Player, onPlayCard: (Card) -> Unit) {
+fun PlayerHandView(player: Player, onPlayCard: (GameCard) -> Unit) {
     Column {
         Text("${player.name}'s Hand:", style = MaterialTheme.typography.titleMedium)
         Row {
