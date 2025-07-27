@@ -46,4 +46,14 @@ void Hand::addToHand(Card cardToAdd)
 	cardsInHand.push_back(cardToAdd);
 }
 
+Card Hand::getCardByIndex(int i) const
+{
+	return cardsInHand[i];
+}
+
+int Hand::getHandSize() const
+{
+	return cardsInHand.size();
+}
+
 

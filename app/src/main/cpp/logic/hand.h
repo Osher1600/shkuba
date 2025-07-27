@@ -13,6 +13,8 @@ public:
 	status playCard(int cardIndex, std::vector<int> cardsToTake, Board& myBoard);
 	status dropCard(int cardIndex,Board& myBoard);	//now only returns OK, in later versions we will check if possible.
 	void addToHand(Card cardToAdd);
+	Card getCardByIndex(int i) const;
+	int getHandSize() const;
 	
 	
 

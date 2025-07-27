@@ -50,5 +50,8 @@
     <ClCompile Include="round.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="gameBot.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -139,6 +139,7 @@
     <ClCompile Include="board.cpp" />
     <ClCompile Include="card.cpp" />
     <ClCompile Include="deck.cpp" />
+    <ClCompile Include="gameBot.cpp" />
     <ClCompile Include="hand.cpp" />
     <ClCompile Include="round.cpp" />
   </ItemGroup>
