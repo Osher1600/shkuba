@@ -26,11 +26,18 @@ import com.dinari.shkuba.ui.PvpPlayerListScreen
 import com.shkuba.network.NetworkService
 
 class MainActivity : ComponentActivity() {
+    companion object {
+        init {
+            System.loadLibrary("shkuba") // Replace with your actual library name if different
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             val isDarkMode = remember { mutableStateOf(false) }
+            val board = Board();
             val localeState = remember { mutableStateOf(Locale.getDefault()) }
             val context = LocalContext.current
             val config = Configuration(context.resources.configuration)
@@ -102,15 +109,15 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
                 MainMenu(
                     onStartGame = {
                         val player = Player("You", listOf(
-                            Card("A", Suit.Spades),
-                            Card("7", Suit.Diamonds),
-                            Card("K", Suit.Clubs),
-                            Card("3", Suit.Hearts)
+                            CardGui("A", Suit.Spades),
+                            CardGui("7", Suit.Diamonds),
+                            CardGui("K", Suit.Clubs),
+                            CardGui("3", Suit.Hearts)
                         ))
                         val opponent = Player("Opponent", listOf())
                         val tableCards = listOf(
-                            Card("2", Suit.Spades),
-                            Card("J", Suit.Diamonds)
+                            CardGui("2", Suit.Spades),
+                            CardGui("J", Suit.Diamonds)
                         )
                         gameState.value = GameState(
                             players = listOf(player, opponent),

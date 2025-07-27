@@ -13,4 +13,6 @@ public:
 private:
 
 	std::vector<Card> cardsOnBoard;
+	//int p1Shkuba;
+	//int p2Shkuba;
 };

@@ -6,3 +6,9 @@ plugins {
 
     id("com.google.gms.google-services") version "4.4.3" apply false
 }
+
+allprojects {
+    repositories {
+        // Removed repository declarations to avoid conflict with settings.gradle.kts
+    }
+}

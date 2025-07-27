@@ -16,7 +16,8 @@ local.properties
 app/google-services.json
 *.db
 *.ipch
-logic/x64/
-logic/.vs/shkuba/CopilotIndices/
-logic/.vs/
+app/src/main/cpp/logic/x64/
+app/src/main/cpp/logic/.vs/shkuba/CopilotIndices/
+app/src/main/cpp/logic/.vs/
 
+app/src/main/cpp/logic/shkuba/x64/

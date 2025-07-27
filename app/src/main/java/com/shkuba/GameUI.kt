@@ -32,27 +32,28 @@ sealed class Suit(val symbol: String) {
     object Hearts : Suit("♥")
 }
 
-data class Card(val value: String, val suit: Suit) {
+data class CardGui(val value: String, val suit: Suit) {
     override fun toString(): String = "$value${suit.symbol}"
 }
 
-data class Player(val name: String, val hand: List<Card>)
+data class Player(val name: String, val hand: List<CardGui>)
 
 data class GameState(
     val players: List<Player>,
-    val tableCards: List<Card>,
+    val tableCards: List<CardGui>,
     val currentPlayerIndex: Int
 )
 
 // UI Components
 @Composable
 fun CardView(
-    card: Card,
+    card: CardGui,
     onClick: (() -> Unit)? = null
 ) {
     Card(
         modifier = Modifier
-            .size(70.dp, 100.dp),
+            .size(70.dp, 100.dp)
+            .clickable(enabled = onClick != null) { onClick?.invoke() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
@@ -100,7 +101,7 @@ fun CardView(
 }
 
 @Composable
-fun GameScreen(gameState: GameState, onPlayCard: (Card) -> Unit) {
+fun GameScreen(gameState: GameState, onPlayCard: (CardGui) -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -188,32 +189,6 @@ fun GameScreen(gameState: GameState, onPlayCard: (Card) -> Unit) {
                         }
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun TableView(cards: List<Card>) {
-    Column {
-        Text("Table:", style = MaterialTheme.typography.titleMedium)
-        Row {
-            cards.forEach { card ->
-                CardView(card)
-                Spacer(modifier = Modifier.width(8.dp))
-            }
-        }
-    }
-}
-
-@Composable
-fun PlayerHandView(player: Player, onPlayCard: (Card) -> Unit) {
-    Column {
-        Text("${player.name}'s Hand:", style = MaterialTheme.typography.titleMedium)
-        Row {
-            player.hand.forEach { card ->
-                CardView(card, onClick = { onPlayCard(card) })
-                Spacer(modifier = Modifier.width(8.dp))
             }
         }
     }
