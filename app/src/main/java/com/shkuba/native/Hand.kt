@@ -26,6 +26,9 @@ class Hand {
     // JNI: Drop card to board
     external fun dropCard(cardIndex: Int, boardHandle: Long): Int
 
+    // JNI: Play card with capturing (matches C++ playCard method)
+    external fun playCard(cardIndex: Int, cardsToTake: IntArray, boardHandle: Long): Int
+
     protected fun finalize() {
         if (nativeHandle != 0L) {
             nativeDestroy(nativeHandle)

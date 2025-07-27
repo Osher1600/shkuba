@@ -22,6 +22,11 @@ public:
 	void firstMiniRound(bool choice);
 	void giveCardsToPlayers();
 
+	// Getter methods for accessing game components
+	Hand& getP1Hand() { return p1Hand; }
+	Hand& getP2Hand() { return p2Hand; }
+	Board& getBoard() { return m_board; }
+
 
 private:
 	Deck roundDeck;
