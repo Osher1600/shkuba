@@ -2,10 +2,16 @@ package com.dinari.shkuba
 
 class Hand {
     // Native pointer to the C++ Hand instance
-    private var nativeHandle: Long = 0
+    var nativeHandle: Long = 0
+        private set
 
-    init {
+    constructor() {
         nativeHandle = nativeCreate()
+    }
+
+    // Constructor that takes an existing native handle (for bot integration)
+    constructor(existingHandle: Long) {
+        nativeHandle = existingHandle
     }
 
     // JNI: Create C++ Hand instance

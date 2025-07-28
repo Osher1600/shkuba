@@ -31,6 +31,7 @@ import com.dinari.shkuba.MainMenu
 import com.dinari.shkuba.OptionsScreen
 import com.dinari.shkuba.Player
 import com.dinari.shkuba.R
+import com.dinari.shkuba.GameBot
 import com.dinari.shkuba.Round
 import com.dinari.shkuba.Suit
 import com.dinari.shkuba.createGameStateFromRound
@@ -77,6 +78,7 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
     
     // Create native Round instance instead of hardcoded game state
     val nativeRound = remember { mutableStateOf<Round?>(null) }
+    val gameBot = remember { mutableStateOf<GameBot?>(null) }
     val gameState = remember {
         mutableStateOf(
             GameState(
@@ -129,6 +131,10 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
                         round.firstMiniRound(false)
                         nativeRound.value = round
                         
+                        // Initialize the game bot
+                        val bot = GameBot()
+                        gameBot.value = bot
+                        
                         // Create game state from native round
                         gameState.value = createGameStateFromRound(round, 0)
                         showMenu.value = false
@@ -164,12 +170,28 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
                     GameScreen(
                         gameState = gameState.value, 
                         onPlayCard = { card ->
-                            // TODO: Implement play card logic using native Round
-                            // This would involve calling Round methods to play the card
-                            // and update the gameState accordingly
+                            // Handle human player move
                             nativeRound.value?.let { round ->
-                                // Refresh game state from native round
-                                gameState.value = createGameStateFromRound(round, gameState.value.currentPlayerIndex)
+                                // TODO: Implement actual card play logic using Round methods
+                                // For now, just refresh the game state
+                                
+                                // After human player moves, it's bot's turn
+                                if (gameState.value.currentPlayerIndex == 0) {
+                                    // Bot makes a move
+                                    gameBot.value?.let { bot ->
+                                        val botHand = round.getP2HandForBot()
+                                        val board = round.getBoardForBot()
+                                        
+                                        // Bot makes its move
+                                        bot.makeMove(botHand, board)
+                                        
+                                        // Update game state and switch to human player's turn
+                                        gameState.value = createGameStateFromRound(round, 0)
+                                    }
+                                } else {
+                                    // Switch back to human player
+                                    gameState.value = createGameStateFromRound(round, 0)
+                                }
                             }
                         }
                     )

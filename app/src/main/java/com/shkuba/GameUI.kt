@@ -66,8 +66,8 @@ fun createGameStateFromRound(round: Round, currentPlayer: Int = 0): GameState {
     val boardCards = round.getBoardAsCards().toCardGuiList()
     
     val players = listOf(
-        Player("Player 1", p1Cards),
-        Player("Player 2", p2Cards)
+        Player("You", p1Cards),  // Player 1 is the human player
+        Player("Bot", p2Cards)   // Player 2 is the bot
     )
     
     return GameState(

@@ -45,6 +45,11 @@ class Round {
     // JNI: Get board cards as [suit, rank] pairs
     external fun getBoard(): IntArray
 
+    // JNI: Get direct access to Hand objects for bot integration
+    external fun getP1HandObject(): Long
+    external fun getP2HandObject(): Long
+    external fun getBoardObject(): Long
+
     // Helper methods to convert to NativeCard lists
     fun getP1HandAsCards(): List<NativeCard> {
         val handData = getP1Hand()
@@ -80,6 +85,22 @@ class Round {
             }
         }
         return cards
+    }
+
+    // Helper methods to get Hand and Board objects for bot integration
+    fun getP1HandForBot(): Hand {
+        val handHandle = getP1HandObject()
+        return Hand(handHandle)
+    }
+
+    fun getP2HandForBot(): Hand {
+        val handHandle = getP2HandObject()
+        return Hand(handHandle)
+    }
+
+    fun getBoardForBot(): Board {
+        val boardHandle = getBoardObject()
+        return Board(boardHandle)
     }
 
     protected fun finalize() {

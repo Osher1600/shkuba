@@ -5,6 +5,7 @@
 #include "deck.h"
 #include "hand.h"
 #include "round.h"
+#include "logic/gameBot.h"
 
 #define LOG_TAG "ShkubaJNI"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
@@ -438,6 +439,93 @@ JNIEXPORT jintArray JNICALL Java_com_dinari_shkuba_Round_getBoard(JNIEnv* env, j
         return result;
     }
     return env->NewIntArray(0);
+}
+
+// Round object access methods for bot integration
+JNIEXPORT jlong JNICALL Java_com_dinari_shkuba_Round_getP1HandObject(JNIEnv* env, jobject thiz) {
+    jclass cls = env->GetObjectClass(thiz);
+    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jlong handle = env->GetLongField(thiz, handleField);
+    Round* round = reinterpret_cast<Round*>(handle);
+
+    if (round) {
+        return reinterpret_cast<jlong>(&round->getP1Hand());
+    }
+    return 0;
+}
+
+JNIEXPORT jlong JNICALL Java_com_dinari_shkuba_Round_getP2HandObject(JNIEnv* env, jobject thiz) {
+    jclass cls = env->GetObjectClass(thiz);
+    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jlong handle = env->GetLongField(thiz, handleField);
+    Round* round = reinterpret_cast<Round*>(handle);
+
+    if (round) {
+        return reinterpret_cast<jlong>(&round->getP2Hand());
+    }
+    return 0;
+}
+
+JNIEXPORT jlong JNICALL Java_com_dinari_shkuba_Round_getBoardObject(JNIEnv* env, jobject thiz) {
+    jclass cls = env->GetObjectClass(thiz);
+    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jlong handle = env->GetLongField(thiz, handleField);
+    Round* round = reinterpret_cast<Round*>(handle);
+
+    if (round) {
+        return reinterpret_cast<jlong>(&round->getBoard());
+    }
+    return 0;
+}
+
+// GameBot JNI Methods
+JNIEXPORT jlong JNICALL Java_com_dinari_shkuba_GameBot_nativeCreate(JNIEnv* env, jobject thiz) {
+    try {
+        GameBot* bot = new GameBot();
+        LOGI("GameBot created successfully");
+        return reinterpret_cast<jlong>(bot);
+    } catch (const std::exception& e) {
+        LOGE("Error creating GameBot: %s", e.what());
+        return 0;
+    }
+}
+
+JNIEXPORT void JNICALL Java_com_dinari_shkuba_GameBot_nativeDestroy(JNIEnv* env, jobject thiz, jlong handle) {
+    GameBot* bot = reinterpret_cast<GameBot*>(handle);
+    if (bot) {
+        delete bot;
+        LOGI("GameBot destroyed successfully");
+    }
+}
+
+JNIEXPORT void JNICALL Java_com_dinari_shkuba_GameBot_playCard(JNIEnv* env, jobject thiz, jlong handHandle, jlong boardHandle) {
+    jclass cls = env->GetObjectClass(thiz);
+    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jlong botHandle = env->GetLongField(thiz, handleField);
+    
+    GameBot* bot = reinterpret_cast<GameBot*>(botHandle);
+    Hand* hand = reinterpret_cast<Hand*>(handHandle);
+    Board* board = reinterpret_cast<Board*>(boardHandle);
+    
+    if (bot && hand && board) {
+        bot->playCard(*hand, *board);
+        LOGI("Bot played a card");
+    }
+}
+
+JNIEXPORT void JNICALL Java_com_dinari_shkuba_GameBot_dropCardNative(JNIEnv* env, jobject thiz, jlong handHandle, jlong boardHandle) {
+    jclass cls = env->GetObjectClass(thiz);
+    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jlong botHandle = env->GetLongField(thiz, handleField);
+    
+    GameBot* bot = reinterpret_cast<GameBot*>(botHandle);
+    Hand* hand = reinterpret_cast<Hand*>(handHandle);
+    Board* board = reinterpret_cast<Board*>(boardHandle);
+    
+    if (bot && hand && board) {
+        bot->botDropCard(*hand, *board);
+        LOGI("Bot dropped a card");
+    }
 }
 
 } // extern "C"
