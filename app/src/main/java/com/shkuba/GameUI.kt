@@ -44,6 +44,39 @@ data class GameState(
     val currentPlayerIndex: Int
 )
 
+// Bridge between native cards and UI representation
+fun NativeCard.toCardGui(): CardGui {
+    val suit = when (this.getSuitEnum()) {
+        NativeCard.Suit.SPADES -> Suit.Spades
+        NativeCard.Suit.HEARTS -> Suit.Hearts
+        NativeCard.Suit.DIAMONDS -> Suit.Diamonds
+        NativeCard.Suit.CLUBS -> Suit.Clubs
+    }
+    return CardGui(this.getRank().toString(), suit)
+}
+
+fun List<NativeCard>.toCardGuiList(): List<CardGui> {
+    return this.map { it.toCardGui() }
+}
+
+// Game state from native Round
+fun createGameStateFromRound(round: Round, currentPlayer: Int = 0): GameState {
+    val p1Cards = round.getP1HandAsCards().toCardGuiList()
+    val p2Cards = round.getP2HandAsCards().toCardGuiList()
+    val boardCards = round.getBoardAsCards().toCardGuiList()
+    
+    val players = listOf(
+        Player("Player 1", p1Cards),
+        Player("Player 2", p2Cards)
+    )
+    
+    return GameState(
+        players = players,
+        tableCards = boardCards,
+        currentPlayerIndex = currentPlayer
+    )
+}
+
 // UI Components
 @Composable
 fun CardView(

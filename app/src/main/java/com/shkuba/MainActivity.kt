@@ -31,7 +31,9 @@ import com.dinari.shkuba.MainMenu
 import com.dinari.shkuba.OptionsScreen
 import com.dinari.shkuba.Player
 import com.dinari.shkuba.R
+import com.dinari.shkuba.Round
 import com.dinari.shkuba.Suit
+import com.dinari.shkuba.createGameStateFromRound
 import com.shkuba.ui.PvpPlayerListScreen
 import com.shkuba.network.NetworkService
 
@@ -72,6 +74,9 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeState: MutableState<Locale>) {
     val showMenu = remember { mutableStateOf(true) }
     val showOptions = remember { mutableStateOf(false) }
+    
+    // Create native Round instance instead of hardcoded game state
+    val nativeRound = remember { mutableStateOf<Round?>(null) }
     val gameState = remember {
         mutableStateOf(
             GameState(
@@ -81,6 +86,7 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
             )
         )
     }
+    
     val showInGameMenu = remember { mutableStateOf(false) }
     val showPvpList = remember { mutableStateOf(false) }
     val supportedLanguages = listOf("English", "Hebrew", "Hindi")
@@ -117,22 +123,14 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
             showMenu.value -> {
                 MainMenu(
                     onStartGame = {
-                        val player = Player("You", listOf(
-                            CardGui("A", Suit.Spades),
-                            CardGui("7", Suit.Diamonds),
-                            CardGui("K", Suit.Clubs),
-                            CardGui("3", Suit.Hearts)
-                        ))
-                        val opponent = Player("Opponent", listOf())
-                        val tableCards = listOf(
-                            CardGui("2", Suit.Spades),
-                            CardGui("J", Suit.Diamonds)
-                        )
-                        gameState.value = GameState(
-                            players = listOf(player, opponent),
-                            tableCards = tableCards,
-                            currentPlayerIndex = 0
-                        )
+                        // Initialize native Round with P1 as first player
+                        val round = Round(Round.Player.P1)
+                        // Start first mini round - put start card on board (choice = false)
+                        round.firstMiniRound(false)
+                        nativeRound.value = round
+                        
+                        // Create game state from native round
+                        gameState.value = createGameStateFromRound(round, 0)
                         showMenu.value = false
                     },
                     onOptions = { showOptions.value = true },
@@ -163,7 +161,18 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
             }
             else -> {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    GameScreen(gameState = gameState.value, onPlayCard = { /* TODO: Play card logic */ })
+                    GameScreen(
+                        gameState = gameState.value, 
+                        onPlayCard = { card ->
+                            // TODO: Implement play card logic using native Round
+                            // This would involve calling Round methods to play the card
+                            // and update the gameState accordingly
+                            nativeRound.value?.let { round ->
+                                // Refresh game state from native round
+                                gameState.value = createGameStateFromRound(round, gameState.value.currentPlayerIndex)
+                            }
+                        }
+                    )
                     Button(
                         onClick = { showInGameMenu.value = true },
                         modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
