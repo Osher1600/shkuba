@@ -70,19 +70,12 @@ class GameManager {
 
             val status = r.playCard(Round.P1, cardIndex, cardsToTake)
             if (status == Round.STATUS_OK) {
-                // Add any taken cards to player's pile
-                for (cardIdx in cardsToTake) {
-                    // This would need to be implemented in C++ to add cards to pile
-                }
+                // Add the played card and captured cards to player's pile
+                // The C++ logic should handle this, but we need to make sure
                 
                 // Check if round is complete (no cards in hands)
-                if (r.getP1HandCards().isEmpty() && r.getP2HandCards().isEmpty()) {
-                    endRound()
-                } else if (r.getP1HandCards().isEmpty() || r.getP2HandCards().isEmpty()) {
-                    // Give more cards if deck is not empty
-                    r.giveCardsToPlayers()
-                }
-
+                checkRoundCompletion(r)
+                
                 // Switch to bot turn
                 currentPlayerTurn = Round.P2
                 makeBotMove()
@@ -100,13 +93,8 @@ class GameManager {
             val status = r.dropCard(Round.P1, cardIndex)
             if (status == Round.STATUS_OK) {
                 // Check if round is complete
-                if (r.getP1HandCards().isEmpty() && r.getP2HandCards().isEmpty()) {
-                    endRound()
-                } else if (r.getP1HandCards().isEmpty() || r.getP2HandCards().isEmpty()) {
-                    // Give more cards if deck is not empty
-                    r.giveCardsToPlayers()
-                }
-
+                checkRoundCompletion(r)
+                
                 // Switch to bot turn
                 currentPlayerTurn = Round.P2
                 makeBotMove()
@@ -116,20 +104,39 @@ class GameManager {
         return false
     }
 
+    private fun checkRoundCompletion(round: Round) {
+        val p1HandEmpty = round.getP1HandCards().isEmpty()
+        val p2HandEmpty = round.getP2HandCards().isEmpty()
+        
+        if (p1HandEmpty && p2HandEmpty) {
+            endRound()
+        } else if (p1HandEmpty || p2HandEmpty) {
+            // Try to give more cards if deck is not empty
+            // For now, assume deck might be empty and end round
+            // In full implementation, you'd check deck status
+            try {
+                round.giveCardsToPlayers()
+            } catch (e: Exception) {
+                // Deck might be empty, end round
+                endRound()
+            }
+        }
+    }
+
     private fun makeBotMove() {
         round?.let { r ->
-            gameBot?.makeMove(r)
-            
-            // Check if round is complete
-            if (r.getP1HandCards().isEmpty() && r.getP2HandCards().isEmpty()) {
-                endRound()
-            } else if (r.getP1HandCards().isEmpty() || r.getP2HandCards().isEmpty()) {
-                // Give more cards if deck is not empty
-                r.giveCardsToPlayers()
+            try {
+                gameBot?.makeMove(r)
+                
+                // Check if round is complete
+                checkRoundCompletion(r)
+                
+                // Switch back to player turn
+                currentPlayerTurn = Round.P1
+            } catch (e: Exception) {
+                // Handle bot move error, maybe just switch turns
+                currentPlayerTurn = Round.P1
             }
-
-            // Switch back to player turn
-            currentPlayerTurn = Round.P1
         }
     }
 
