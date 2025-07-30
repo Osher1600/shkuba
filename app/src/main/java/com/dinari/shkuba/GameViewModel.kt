@@ -368,55 +368,17 @@ class GameViewModel : ViewModel() {
         val handSize = hand.getHandSize()
         for (i in 0 until handSize) {
             val handCard = hand.getCardAsNativeCard(i)
-            if (handCard != null && cardGuiMatchesNativeCard(cardGui, handCard)) {
+            if (handCard != null && CardConverter.cardGuiMatchesNativeCard(cardGui, handCard)) {
                 return i
             }
         }
         return -1
     }
 
-    private fun cardGuiMatchesNativeCard(cardGui: CardGui, nativeCard: NativeCard): Boolean {
-        val guiSuit = when (cardGui.suit) {
-            is Suit.Spades -> 0  // S
-            is Suit.Hearts -> 1  // H
-            is Suit.Diamonds -> 2  // D
-            is Suit.Clubs -> 3  // C
-        }
-        val guiRank = when (cardGui.value) {
-            "A" -> 1
-            "J" -> 11
-            "Q" -> 12
-            "K" -> 13
-            else -> cardGui.value.toIntOrNull() ?: 0
-        }
-        
-        return guiSuit == nativeCard.getSuit() && guiRank == nativeCard.getRank()
-    }
-
-    private fun nativeCardToCardGui(nativeCard: NativeCard): CardGui {
-        val suit = when (nativeCard.getSuit()) {
-            0 -> Suit.Spades
-            1 -> Suit.Hearts
-            2 -> Suit.Diamonds
-            3 -> Suit.Clubs
-            else -> Suit.Spades
-        }
-        
-        val value = when (nativeCard.getRank()) {
-            1 -> "A"
-            11 -> "J"
-            12 -> "Q"
-            13 -> "K"
-            else -> nativeCard.getRank().toString()
-        }
-        
-        return CardGui(value, suit)
-    }
-
     private fun updateGameUI() {
-        val playerCards = playerHand.getAllCards().map { nativeCardToCardGui(it) }
-        val botCards = botHand.getAllCards().map { nativeCardToCardGui(it) }
-        val tableCards = board.getBoard().map { nativeCardToCardGui(it) }
+        val playerCards = playerHand.getAllCards().map { CardConverter.nativeCardToCardGui(it) }
+        val botCards = botHand.getAllCards().map { CardConverter.nativeCardToCardGui(it) }
+        val tableCards = board.getBoard().map { CardConverter.nativeCardToCardGui(it) }
         
         updateUIState { currentState ->
             currentState.copy(
