@@ -9,6 +9,7 @@ public:
 	Deck();		//constructor
 	void shuffleDeck();
 	Card draw();
+	bool isEmpty() const { return cards.empty(); }
 
 
 private:

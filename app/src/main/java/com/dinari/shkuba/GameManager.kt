@@ -112,12 +112,15 @@ class GameManager {
             endRound()
         } else if (p1HandEmpty || p2HandEmpty) {
             // Try to give more cards if deck is not empty
-            // For now, assume deck might be empty and end round
-            // In full implementation, you'd check deck status
-            try {
-                round.giveCardsToPlayers()
-            } catch (e: Exception) {
-                // Deck might be empty, end round
+            if (!round.isDeckEmpty()) {
+                try {
+                    round.giveCardsToPlayers()
+                } catch (e: Exception) {
+                    // Error giving cards, end round
+                    endRound()
+                }
+            } else {
+                // Deck is empty, end round
                 endRound()
             }
         }

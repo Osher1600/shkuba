@@ -59,6 +59,9 @@ class Round(firstPlayer: Int) {
     // Drop a card (returns status)
     external fun dropCard(player: Int, cardIndex: Int): Int
 
+    // Check if deck is empty
+    external fun isDeckEmpty(): Boolean
+
     // Convert raw card data to CardGui objects
     fun intArrayToCards(cardData: IntArray): List<CardGui> {
         val cards = mutableListOf<CardGui>()

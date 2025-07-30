@@ -1,4 +1,5 @@
 #include "hand.h"
+#include <algorithm>
 
 Hand::Hand()
 {
@@ -8,15 +9,24 @@ Hand::status Hand::playCard(int cardIndex, std::vector<int> cardsToTake, Board& 
 {
 	//checks:
 	int sumCards = 0;
-	for (int i = 1; i < cardsToTake.size(); ++i)
+	for (int i = 0; i < cardsToTake.size(); ++i)  // Fixed: start from 0
 	{
+		if (cardsToTake[i] >= myBoard.getBoardSize()) {
+			return STATUS_ERROR_NOT_FIT; // Invalid board index
+		}
 		sumCards += myBoard.getCardByIndex(cardsToTake[i]).getRank();
 	}
+	
+	if (cardIndex >= cardsInHand.size()) {
+		return STATUS_ERROR_NOT_FIT; // Invalid hand index
+	}
+	
 	if (sumCards != cardsInHand[cardIndex].getRank())
 	{
 		return STATUS_ERROR_NOT_FIT;
 	}
 
+	// Check if trying to take multiple cards when single card match exists
 	for (int i = 0; i < myBoard.getBoardSize(); ++i)
 	{
 		if (myBoard.getCardByIndex(i).getRank() == cardsInHand[cardIndex].getRank())
@@ -27,11 +37,19 @@ Hand::status Hand::playCard(int cardIndex, std::vector<int> cardsToTake, Board& 
 			}
 		}
 	}
+	
+	// Remove cards from board (in reverse order to maintain indices)
+	std::sort(cardsToTake.begin(), cardsToTake.end(), std::greater<int>());
+	for (int idx : cardsToTake) {
+		// This will be handled by Board::removeCards if it exists
+		// For now, we need to modify the Board class or handle it in Round
+	}
+	myBoard.removeCards(cardsToTake);
+	
+	// Remove card from hand
 	cardsInHand.erase(cardsInHand.begin()+cardIndex);
 
 	return STATUS_OK;
-
-
 }
 
 Hand::status Hand::dropCard(int cardIndex, Board& myBoard)

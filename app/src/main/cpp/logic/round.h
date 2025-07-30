@@ -29,6 +29,9 @@ public:
 	const Hand& getP1Hand() const { return p1Hand; }
 	const Hand& getP2Hand() const { return p2Hand; }
 	const Board& getBoard() const { return m_board; }
+	
+	// Check if deck is empty
+	bool isDeckEmpty() const { return roundDeck.isEmpty(); }
 
 
 private:

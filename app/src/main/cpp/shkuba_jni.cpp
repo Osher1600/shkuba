@@ -392,7 +392,7 @@ JNIEXPORT jintArray JNICALL Java_com_dinari_shkuba_Round_getBoardCards(JNIEnv* e
     return env->NewIntArray(0);
 }
 
-// Player action: play card
+// Player action: play card with pile management
 JNIEXPORT jint JNICALL Java_com_dinari_shkuba_Round_playCard(JNIEnv* env, jobject thiz, jint player, jint cardIndex, jintArray cardsToTake) {
     jclass cls = env->GetObjectClass(thiz);
     jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
@@ -408,7 +408,32 @@ JNIEXPORT jint JNICALL Java_com_dinari_shkuba_Round_playCard(JNIEnv* env, jobjec
         Hand& hand = (player == 0) ? round->getP1Hand() : round->getP2Hand();
         Board& board = round->getBoard();
         
+        // Store cards that will be captured before playing
+        Card playedCard = hand.getCardByIndex(cardIndex);
+        std::vector<Card> capturedCards;
+        for (int idx : cardsToTakeVec) {
+            if (idx < board.getBoardSize()) {
+                capturedCards.push_back(board.getCardByIndex(idx));
+            }
+        }
+        
         Hand::status result = hand.playCard(cardIndex, cardsToTakeVec, board);
+        
+        if (result == Hand::STATUS_OK) {
+            // Add played card and captured cards to appropriate pile
+            if (player == 0) {
+                round->addToP1Pile(playedCard);
+                for (const Card& captured : capturedCards) {
+                    round->addToP1Pile(captured);
+                }
+            } else {
+                round->addToP2Pile(playedCard);
+                for (const Card& captured : capturedCards) {
+                    round->addToP2Pile(captured);
+                }
+            }
+        }
+        
         return static_cast<jint>(result);
     }
     return -1;
@@ -429,6 +454,18 @@ JNIEXPORT jint JNICALL Java_com_dinari_shkuba_Round_dropCard(JNIEnv* env, jobjec
         return static_cast<jint>(result);
     }
     return -1;
+}
+
+// Check if deck is empty
+JNIEXPORT jboolean JNICALL Java_com_dinari_shkuba_Round_isDeckEmpty(JNIEnv* env, jobject thiz) {
+    jclass cls = env->GetObjectClass(thiz);
+    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jlong handle = env->GetLongField(thiz, handleField);
+    Round* round = reinterpret_cast<Round*>(handle);
+    if (round) {
+        return round->isDeckEmpty();
+    }
+    return true; // Assume empty if error
 }
 
 // GameBot JNI Methods

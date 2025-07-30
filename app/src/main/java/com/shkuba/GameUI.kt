@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.horizontalScroll
 import com.dinari.shkuba.R
 
@@ -760,9 +761,70 @@ fun PlayerHandSection(
                         card = card,
                         onClick = if (gameStatus.isPlayerTurn) {
                             {
-                                // For now, just drop the card (simple play)
-                                // In a full implementation, you'd have UI to select cards to take
-                                val success = gameManager.dropCard(index)
+                                // Simple logic: try to find matching cards on table
+                                val tableCards = gameStatus.tableCards
+                                val cardsToTake = mutableListOf<Int>()
+                                
+                                // Look for exact matches first
+                                tableCards.forEachIndexed { tableIndex, tableCard ->
+                                    if (card.value == tableCard.value) {
+                                        cardsToTake.add(tableIndex)
+                                    }
+                                }
+                                
+                                // If no exact matches, try combinations (simplified)
+                                if (cardsToTake.isEmpty() && tableCards.size > 1) {
+                                    val cardValue = try {
+                                        when (card.value) {
+                                            "A" -> 1
+                                            "J" -> 11
+                                            "Q" -> 12
+                                            "K" -> 13
+                                            else -> card.value.toInt()
+                                        }
+                                    } catch (e: Exception) { 0 }
+                                    
+                                    // Try pairs
+                                    for (i in tableCards.indices) {
+                                        for (j in i + 1 until tableCards.size) {
+                                            val val1 = try {
+                                                when (tableCards[i].value) {
+                                                    "A" -> 1
+                                                    "J" -> 11
+                                                    "Q" -> 12
+                                                    "K" -> 13
+                                                    else -> tableCards[i].value.toInt()
+                                                }
+                                            } catch (e: Exception) { 0 }
+                                            
+                                            val val2 = try {
+                                                when (tableCards[j].value) {
+                                                    "A" -> 1
+                                                    "J" -> 11
+                                                    "Q" -> 12
+                                                    "K" -> 13
+                                                    else -> tableCards[j].value.toInt()
+                                                }
+                                            } catch (e: Exception) { 0 }
+                                            
+                                            if (val1 + val2 == cardValue) {
+                                                cardsToTake.clear()
+                                                cardsToTake.add(i)
+                                                cardsToTake.add(j)
+                                                break
+                                            }
+                                        }
+                                        if (cardsToTake.isNotEmpty()) break
+                                    }
+                                }
+                                
+                                // Play the card
+                                val success = if (cardsToTake.isNotEmpty()) {
+                                    gameManager.playCard(index, cardsToTake.toIntArray())
+                                } else {
+                                    gameManager.dropCard(index)
+                                }
+                                
                                 if (success) {
                                     onUpdateGameState()
                                 }
