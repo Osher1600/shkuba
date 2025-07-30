@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/shkuba/Board.kt">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/src/main/java/com/shkuba/Board.kt" />
+              <option name="originalContent" value="&#10;" />
+              <option name="updatedContent" value="package com.dinari.shkuba&#10;&#10;class Board {&#10;    // Native pointer to the C++ Board instance&#10;    private var nativeHandle: Long = 0&#10;&#10;    init {&#10;        nativeHandle = nativeCreate()&#10;    }&#10;&#10;    // JNI: Create C++ Board instance&#10;    private external fun nativeCreate(): Long&#10;&#10;    // JNI: Clean up C++ Board instance&#10;    private external fun nativeDestroy(handle: Long)&#10;&#10;    // JNI: Get board size&#10;    external fun getBoardSize(): Int&#10;&#10;    // JNI: Add card to board&#10;    external fun addToBoard(suit: Int, rank: Int)&#10;&#10;    // JNI: Get all cards on board as array of [suit, rank] pairs&#10;    external fun getBoard(): IntArray&#10;&#10;    // Helper function to convert board data to Card objects&#10;    fun getBoardCards(): List&lt;Card&gt; {&#10;        val boardData = getBoard()&#10;        val cards = mutableListOf&lt;Card&gt;()&#10;        for (i in boardData.indices step 2) {&#10;            if (i + 1 &lt; boardData.size) {&#10;                cards.add(Card(boardData[i], boardData[i + 1]))&#10;            }&#10;        }&#10;        return cards&#10;    }&#10;&#10;    protected fun finalize() {&#10;        if (nativeHandle != 0L) {&#10;            nativeDestroy(nativeHandle)&#10;            nativeHandle = 0L&#10;        }&#10;    }&#10;&#10;    companion object {&#10;        init {&#10;            System.loadLibrary(&quot;shkuba&quot;)&#10;        }&#10;    }&#10;}" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

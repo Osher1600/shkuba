@@ -14,4 +14,6 @@
     <string name="play_card">שחק קלף</string>
     <string name="current_player">שחקן נוכחי: %1$s</string>
     <string name="language">שפה</string>
+    <string name="pvp">שחקן מול שחקן</string>
+    <string name="no_players_available">אין שחקנים זמינים</string>
 </resources>

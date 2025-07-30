@@ -14,4 +14,6 @@
     <string name="play_card">Play Card</string>
     <string name="current_player">Current Player: %1$s</string>
     <string name="language">Language</string>
+    <string name="pvp">PVP</string>
+    <string name="no_players_available">No players available</string>
 </resources>
