@@ -1,14 +1,14 @@
 package com.dinari.shkuba
 
 class Board {
-    private var nativeHandle: Long = 0
+    private var _nativeHandle: Long = 0
 
     init {
-        nativeHandle = nativeCreate()
+        _nativeHandle = nativeCreate()
     }
 
     // Expose native handle for JNI interactions
-    val nativeHandle: Long get() = this.nativeHandle
+    val nativeHandle: Long get() = _nativeHandle
 
     fun getBoardSize(): Int {
         return getBoardSizeNative()
@@ -34,7 +34,7 @@ class Board {
     }
 
     fun destroy() {
-        nativeDestroy(nativeHandle)
+        nativeDestroy(_nativeHandle)
     }
 
     // Native methods
