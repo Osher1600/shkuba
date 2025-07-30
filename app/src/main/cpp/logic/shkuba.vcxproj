@@ -131,6 +131,7 @@
     <ClInclude Include="board.h" />
     <ClInclude Include="card.h" />
     <ClInclude Include="deck.h" />
+    <ClInclude Include="game.h" />
     <ClInclude Include="gameBot.h" />
     <ClInclude Include="round.h" />
     <ClInclude Include="hand.h" />
@@ -139,9 +140,13 @@
     <ClCompile Include="board.cpp" />
     <ClCompile Include="card.cpp" />
     <ClCompile Include="deck.cpp" />
+    <ClCompile Include="game.cpp" />
     <ClCompile Include="gameBot.cpp" />
     <ClCompile Include="hand.cpp" />
     <ClCompile Include="round.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="roundLogic.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -33,6 +33,9 @@
     <ClInclude Include="gameBot.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="game.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="card.cpp">
@@ -53,5 +56,11 @@
     <ClCompile Include="gameBot.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="game.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="roundLogic.md" />
   </ItemGroup>
 </Project>
