@@ -27,61 +27,96 @@ void Round::addToP2Pile(Card cardToAdd)
 
 void Round::countPiles()    
 {
-    int diamonds = 0;
-    int sevens = 0;
-    int sixes = 0;
-    int cards = 0;
+    int p1Diamonds = 0;
+    int p1Sevens = 0;
+    int p1Sixes = 0;
+    int p1Cards = p1Pile.size();
+    
+    int p2Diamonds = 0;
+    int p2Sevens = 0;
+    int p2Sixes = 0;
+    int p2Cards = p2Pile.size();
    
-    cards = p2Pile.size();
-    for (int i = 0; i < cards; ++i)
+    // Count P1 pile
+    for (int i = 0; i < p1Cards; ++i)
     {
         if (p1Pile[i].getSuit() == Card::D)
         {
-            ++diamonds;
-            if (p1Pile[i].getRank() == 7) //only for 7 diamond
+            ++p1Diamonds;
+            if (p1Pile[i].getRank() == 7) // 7 of diamonds gives P1 a point
             {
                 ++p1Points;
-            }
-            else
-            {
-                ++p2Points;
             }
         }
         if (p1Pile[i].getRank() == 7)
         {
-            ++sevens;
+            ++p1Sevens;
         }
         else if (p1Pile[i].getRank() == 6)
         {
-            ++sixes;
+            ++p1Sixes;
         }
     }
 
-    if (sevens > 2 || (sevens == 2 && sixes > 2))
+    // Count P2 pile  
+    for (int i = 0; i < p2Cards; ++i)
     {
-        ++p1Points;
-    }
-    else if (sevens < 2 || (sevens == 2 && sixes < 2))
-    {
-        ++p2Points;
-    }
-    if (cards > 20)
-    {
-        ++p1Points;
-    }
-    else if (cards < 20)
-    {
-        ++p2Points;
-    }
-    if (diamonds > 5)
-    {
-        ++p1Points;
-    }
-    else if (diamonds < 5)
-    {
-        ++p2Points;
+        if (p2Pile[i].getSuit() == Card::D)
+        {
+            ++p2Diamonds;
+        }
+        if (p2Pile[i].getRank() == 7)
+        {
+            ++p2Sevens;
+        }
+        else if (p2Pile[i].getRank() == 6)
+        {
+            ++p2Sixes;
+        }
     }
 
+    // Total counts for comparison
+    int totalSevens = p1Sevens + p2Sevens;
+    int totalSixes = p1Sixes + p2Sixes;
+    int totalCards = p1Cards + p2Cards;
+    int totalDiamonds = p1Diamonds + p2Diamonds;
+
+    // Award points based on who has more
+    if (totalSevens > 2 || (totalSevens == 2 && totalSixes > 2))
+    {
+        if (p1Sevens > p2Sevens || (p1Sevens == p2Sevens && p1Sixes > p2Sixes))
+        {
+            ++p1Points;
+        }
+        else
+        {
+            ++p2Points;
+        }
+    }
+    
+    if (totalCards > 20)
+    {
+        if (p1Cards > p2Cards)
+        {
+            ++p1Points;
+        }
+        else
+        {
+            ++p2Points;
+        }
+    }
+    
+    if (totalDiamonds > 5)
+    {
+        if (p1Diamonds > p2Diamonds)
+        {
+            ++p1Points;
+        }
+        else
+        {
+            ++p2Points;
+        }
+    }
 }
 
 void Round::firstMiniRound(bool choice)  //aka first mini-round

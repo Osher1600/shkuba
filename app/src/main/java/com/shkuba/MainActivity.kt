@@ -72,15 +72,8 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeState: MutableState<Locale>) {
     val showMenu = remember { mutableStateOf(true) }
     val showOptions = remember { mutableStateOf(false) }
-    val gameState = remember {
-        mutableStateOf(
-            GameState(
-                players = listOf(),
-                tableCards = listOf(),
-                currentPlayerIndex = 0
-            )
-        )
-    }
+    val gameManager = remember { GameManager() }
+    val gameState = remember { mutableStateOf(gameManager.getGameStatus()) }
     val showInGameMenu = remember { mutableStateOf(false) }
     val showPvpList = remember { mutableStateOf(false) }
     val supportedLanguages = listOf("English", "Hebrew", "Hindi")
@@ -92,6 +85,11 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
     val selectedLanguage = remember { mutableStateOf(
         languageToLocale.entries.find { it.value.language == localeState.value.language }?.key ?: "English"
     ) }
+
+    // Update game state whenever needed
+    fun updateGameState() {
+        gameState.value = gameManager.getGameStatus()
+    }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         when {
@@ -117,22 +115,8 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
             showMenu.value -> {
                 MainMenu(
                     onStartGame = {
-                        val player = Player("You", listOf(
-                            CardGui("A", Suit.Spades),
-                            CardGui("7", Suit.Diamonds),
-                            CardGui("K", Suit.Clubs),
-                            CardGui("3", Suit.Hearts)
-                        ))
-                        val opponent = Player("Opponent", listOf())
-                        val tableCards = listOf(
-                            CardGui("2", Suit.Spades),
-                            CardGui("J", Suit.Diamonds)
-                        )
-                        gameState.value = GameState(
-                            players = listOf(player, opponent),
-                            tableCards = tableCards,
-                            currentPlayerIndex = 0
-                        )
+                        gameManager.startNewGame()
+                        updateGameState()
                         showMenu.value = false
                     },
                     onOptions = { showOptions.value = true },
@@ -163,7 +147,11 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
             }
             else -> {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    GameScreen(gameState = gameState.value, onPlayCard = { /* TODO: Play card logic */ })
+                    GameScreenWithLogic(
+                        gameStatus = gameState.value,
+                        gameManager = gameManager,
+                        onUpdateGameState = { updateGameState() }
+                    )
                     Button(
                         onClick = { showInGameMenu.value = true },
                         modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)

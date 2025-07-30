@@ -22,6 +22,17 @@ public:
 	void firstMiniRound(bool choice);
 	void giveCardsToPlayers();
 
+	// New public getters for JNI access
+	Hand& getP1Hand() { return p1Hand; }
+	Hand& getP2Hand() { return p2Hand; }
+	Board& getBoard() { return m_board; }
+	const Hand& getP1Hand() const { return p1Hand; }
+	const Hand& getP2Hand() const { return p2Hand; }
+	const Board& getBoard() const { return m_board; }
+	
+	// Check if deck is empty
+	bool isDeckEmpty() const { return roundDeck.isEmpty(); }
+
 
 private:
 	Deck roundDeck;
