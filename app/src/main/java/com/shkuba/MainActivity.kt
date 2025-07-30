@@ -13,10 +13,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.shkuba.ui.theme.ShkubaTheme
 import java.util.Locale
 import androidx.compose.ui.platform.LocalContext
@@ -26,6 +29,7 @@ import com.dinari.shkuba.Board
 import com.dinari.shkuba.CardGui
 import com.dinari.shkuba.GameScreen
 import com.dinari.shkuba.GameState
+import com.dinari.shkuba.GameViewModel
 import com.dinari.shkuba.InGameMenu
 import com.dinari.shkuba.MainMenu
 import com.dinari.shkuba.OptionsScreen
@@ -72,17 +76,11 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeState: MutableState<Locale>) {
     val showMenu = remember { mutableStateOf(true) }
     val showOptions = remember { mutableStateOf(false) }
-    val gameState = remember {
-        mutableStateOf(
-            GameState(
-                players = listOf(),
-                tableCards = listOf(),
-                currentPlayerIndex = 0
-            )
-        )
-    }
     val showInGameMenu = remember { mutableStateOf(false) }
     val showPvpList = remember { mutableStateOf(false) }
+    val gameViewModel: GameViewModel = viewModel()
+    val gameUiState by gameViewModel.uiState.collectAsState()
+    
     val supportedLanguages = listOf("English", "Hebrew", "Hindi")
     val languageToLocale = mapOf(
         "English" to Locale("en"),
@@ -117,22 +115,7 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
             showMenu.value -> {
                 MainMenu(
                     onStartGame = {
-                        val player = Player("You", listOf(
-                            CardGui("A", Suit.Spades),
-                            CardGui("7", Suit.Diamonds),
-                            CardGui("K", Suit.Clubs),
-                            CardGui("3", Suit.Hearts)
-                        ))
-                        val opponent = Player("Opponent", listOf())
-                        val tableCards = listOf(
-                            CardGui("2", Suit.Spades),
-                            CardGui("J", Suit.Diamonds)
-                        )
-                        gameState.value = GameState(
-                            players = listOf(player, opponent),
-                            tableCards = tableCards,
-                            currentPlayerIndex = 0
-                        )
+                        gameViewModel.startNewGame()
                         showMenu.value = false
                     },
                     onOptions = { showOptions.value = true },
@@ -161,14 +144,66 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
                     titleLabel = stringResource(R.string.game_menu)
                 )
             }
-            else -> {
+            gameUiState.isGameActive -> {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    GameScreen(gameState = gameState.value, onPlayCard = { /* TODO: Play card logic */ })
-                    Button(
-                        onClick = { showInGameMenu.value = true },
-                        modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
+                    GameScreen(
+                        gameState = GameState(
+                            players = listOf(
+                                Player("You", gameUiState.playerHand),
+                                Player("Bot", emptyList()) // Don't show bot's cards
+                            ),
+                            tableCards = gameUiState.tableCards,
+                            currentPlayerIndex = 0 // Always show player's perspective
+                        ),
+                        onPlayCard = { card ->
+                            if (gameUiState.isPlayerTurn) {
+                                gameViewModel.playCard(card)
+                            }
+                        }
+                    )
+                    
+                    // Game controls
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(16.dp)
                     ) {
-                        Text(stringResource(R.string.options))
+                        Button(
+                            onClick = { showInGameMenu.value = true }
+                        ) {
+                            Text(stringResource(R.string.options))
+                        }
+                        
+                        // Drop card button
+                        if (gameUiState.isPlayerTurn && gameUiState.playerHand.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = { 
+                                    // Drop first card for simplicity
+                                    gameUiState.playerHand.firstOrNull()?.let { card ->
+                                        gameViewModel.dropCard(card)
+                                    }
+                                }
+                            ) {
+                                Text("Drop Card")
+                            }
+                        }
+                    }
+                    
+                    // Game status
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(16.dp)
+                    ) {
+                        Text("Score: ${gameUiState.gameScore.first} - ${gameUiState.gameScore.second}")
+                        Text(gameUiState.gameMessage)
+                        if (!gameUiState.isPlayerTurn) {
+                            Text("Bot's turn...")
+                        }
+                        if (gameUiState.winner != null) {
+                            Text("Winner: ${gameUiState.winner}")
+                        }
                     }
                 }
             }
