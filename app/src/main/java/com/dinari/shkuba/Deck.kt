@@ -28,8 +28,6 @@ class Deck {
     }
 
     companion object {
-        init {
-            System.loadLibrary("shkuba")
-        }
+        // Library loaded in MainActivity
     }
 }

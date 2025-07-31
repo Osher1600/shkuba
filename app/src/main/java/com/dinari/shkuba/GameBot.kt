@@ -52,8 +52,6 @@ class GameBot {
     }
 
     companion object {
-        init {
-            System.loadLibrary("shkuba")
-        }
+        // Library loaded in MainActivity
     }
 }

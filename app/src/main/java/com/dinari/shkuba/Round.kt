@@ -56,8 +56,6 @@ class Round(firstPlayer: Int) {
         const val P1 = 0
         const val P2 = 1
 
-        init {
-            System.loadLibrary("shkuba")
-        }
+        // Library loaded in MainActivity
     }
 }

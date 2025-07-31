@@ -73,8 +73,6 @@ class Hand {
         const val STATUS_ERROR_NOT_FIT = 1
         const val STATUS_ERROR_CARD_EXIST = 2
 
-        init {
-            System.loadLibrary("shkuba")
-        }
+        // Library loaded in MainActivity
     }
 }

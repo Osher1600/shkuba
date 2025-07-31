@@ -2,6 +2,7 @@ package com.shkuba
 
 import android.content.res.Configuration
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -41,17 +42,32 @@ import com.shkuba.network.NetworkService
 
 class MainActivity : ComponentActivity() {
     companion object {
+        private var libraryLoaded = false
+        
         init {
-            System.loadLibrary("shkuba") // Replace with your actual library name if different
+            try {
+                System.loadLibrary("shkuba")
+                libraryLoaded = true
+            } catch (e: UnsatisfiedLinkError) {
+                android.util.Log.e("MainActivity", "Failed to load native library: ${e.message}")
+                libraryLoaded = false
+            }
         }
+        
+        fun isLibraryLoaded(): Boolean = libraryLoaded
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Check if native library loaded successfully
+        if (!isLibraryLoaded()) {
+            Log.e("MainActivity", "Native library failed to load. Some features may not work.")
+        }
+        
         enableEdgeToEdge()
         setContent {
             val isDarkMode = remember { mutableStateOf(false) }
-            val board = Board()
             val localeState = remember { mutableStateOf(Locale.getDefault()) }
             val context = LocalContext.current
             val config = Configuration(context.resources.configuration)

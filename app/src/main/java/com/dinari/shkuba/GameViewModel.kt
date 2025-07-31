@@ -53,6 +53,14 @@ class GameViewModel : ViewModel() {
 
     private suspend fun startNewRound() {
         try {
+            // Check if native library is loaded
+            if (!com.shkuba.MainActivity.isLibraryLoaded()) {
+                updateUIState {
+                    it.copy(gameMessage = "Error: Native library not loaded. Cannot start game.")
+                }
+                return
+            }
+            
             // Create new round with current first player
             currentRound = game.createNewRound()
             
@@ -78,6 +86,10 @@ class GameViewModel : ViewModel() {
             // Execute first mini round
             executeFirstMiniRound()
             
+        } catch (e: UnsatisfiedLinkError) {
+            updateUIState {
+                it.copy(gameMessage = "Error: Native method not found - ${e.message}")
+            }
         } catch (e: Exception) {
             updateUIState {
                 it.copy(gameMessage = "Error starting round: ${e.message}")
@@ -114,22 +126,37 @@ class GameViewModel : ViewModel() {
             repeat(3) {
                 // Deal to player
                 val playerCardData = deck.dealCard()
-                if (playerCardData.size == 2) {
+                if (playerCardData.size >= 2) {
                     playerHand.addCard(playerCardData[0], playerCardData[1])
+                } else {
+                    updateUIState {
+                        it.copy(gameMessage = "Warning: Invalid card data from deck")
+                    }
+                    return
                 }
                 
                 // Deal to bot
                 val botCardData = deck.dealCard()
-                if (botCardData.size == 2) {
-                    botHand.addCard(botCardData[0], botCardData[1])
+                if (botCardData.size >= 2) {
+                    botHand.addCard(botCardData[0], botCardData[1])  
+                } else {
+                    updateUIState {
+                        it.copy(gameMessage = "Warning: Invalid card data from deck")
+                    }
+                    return
                 }
             }
             
             // Add cards to board (4 cards as per NUM_OF_BOARD)
             repeat(4) {
                 val cardData = deck.dealCard()
-                if (cardData.size == 2) {
+                if (cardData.size >= 2) {
                     board.addToBoard(cardData[0], cardData[1])
+                } else {
+                    updateUIState {
+                        it.copy(gameMessage = "Warning: Invalid card data for board")
+                    }
+                    return
                 }
             }
             
@@ -147,6 +174,10 @@ class GameViewModel : ViewModel() {
                 processBotTurn()
             }
             
+        } catch (e: UnsatisfiedLinkError) {
+            updateUIState {
+                it.copy(gameMessage = "Error: Native method not available - ${e.message}")
+            }
         } catch (e: Exception) {
             updateUIState {
                 it.copy(gameMessage = "Error giving cards: ${e.message}")
@@ -376,24 +407,36 @@ class GameViewModel : ViewModel() {
     }
 
     private fun updateGameUI() {
-        val playerCards = playerHand.getAllCards().map { CardConverter.nativeCardToCardGui(it) }
-        val botCards = botHand.getAllCards().map { CardConverter.nativeCardToCardGui(it) }
-        val tableCards = board.getBoard().map { CardConverter.nativeCardToCardGui(it) }
-        
-        updateUIState { currentState ->
-            currentState.copy(
-                playerHand = playerCards,
-                botHand = botCards,
-                tableCards = tableCards
-            )
+        try {
+            val playerCards = playerHand.getAllCards().map { CardConverter.nativeCardToCardGui(it) }
+            val botCards = botHand.getAllCards().map { CardConverter.nativeCardToCardGui(it) }
+            val tableCards = board.getBoard().map { CardConverter.nativeCardToCardGui(it) }
+            
+            updateUIState { currentState ->
+                currentState.copy(
+                    playerHand = playerCards,
+                    botHand = botCards,
+                    tableCards = tableCards
+                )
+            }
+        } catch (e: UnsatisfiedLinkError) {
+            updateUIState {
+                it.copy(gameMessage = "Error: Native method not available for UI update - ${e.message}")
+            }
+        } catch (e: Exception) {
+            updateUIState {
+                it.copy(gameMessage = "Error updating game UI: ${e.message}")
+            }
         }
     }
 
     private fun deckHasCards(): Boolean {
-        // Simple check - try to deal a card and see if it succeeds
         return try {
             val cardData = deck.dealCard()
-            cardData.isNotEmpty()
+            cardData.isNotEmpty() && cardData.size >= 2
+        } catch (e: UnsatisfiedLinkError) {
+            // If native method fails, assume no cards
+            false
         } catch (e: Exception) {
             false
         }

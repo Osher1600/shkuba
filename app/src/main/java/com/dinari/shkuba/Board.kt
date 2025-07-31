@@ -45,8 +45,6 @@ class Board {
     private external fun getBoardNative(): IntArray
 
     companion object {
-        init {
-            System.loadLibrary("shkuba")
-        }
+        // Library loaded in MainActivity
     }
 }
