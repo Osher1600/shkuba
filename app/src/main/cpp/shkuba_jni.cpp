@@ -33,18 +33,7 @@ JNIEXPORT void JNICALL Java_com_dinari_shkuba_Board_nativeDestroy(JNIEnv* env, j
     }
 }
 
-JNIEXPORT jint JNICALL Java_com_dinari_shkuba_Board_getBoardSize(JNIEnv* env, jobject thiz) {
-    jclass cls = env->GetObjectClass(thiz);
-    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
-    jlong handle = env->GetLongField(thiz, handleField);
-    Board* board = reinterpret_cast<Board*>(handle);
-    if (board) {
-        return static_cast<jint>(board->getBoardSize());
-    }
-    return 0;
-}
-
-JNIEXPORT void JNICALL Java_com_dinari_shkuba_Board_addToBoard(JNIEnv* env, jobject thiz, jint suit, jint rank) {
+JNIEXPORT void JNICALL Java_com_dinari_shkuba_Board_addToBoardNative(JNIEnv* env, jobject thiz, jint suit, jint rank) {
     jclass cls = env->GetObjectClass(thiz);
     jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
     jlong handle = env->GetLongField(thiz, handleField);
@@ -55,7 +44,7 @@ JNIEXPORT void JNICALL Java_com_dinari_shkuba_Board_addToBoard(JNIEnv* env, jobj
     }
 }
 
-JNIEXPORT jintArray JNICALL Java_com_dinari_shkuba_Board_getBoard(JNIEnv* env, jobject thiz) {
+JNIEXPORT jintArray JNICALL Java_com_dinari_shkuba_Board_getBoardNative(JNIEnv* env, jobject thiz) {
     jclass cls = env->GetObjectClass(thiz);
     jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
     jlong handle = env->GetLongField(thiz, handleField);
