@@ -20,6 +20,9 @@ class Deck {
     // JNI: Deal a card (returns suit and rank as array, matches C++ draw method)
     external fun dealCard(): IntArray
 
+    // JNI: Get deck size (matches C++ getDeckSize method)
+    external fun getDeckSize(): Int
+
     protected fun finalize() {
         if (nativeHandle != 0L) {
             nativeDestroy(nativeHandle)

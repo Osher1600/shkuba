@@ -432,8 +432,7 @@ class GameViewModel : ViewModel() {
 
     private fun deckHasCards(): Boolean {
         return try {
-            val cardData = deck.dealCard()
-            cardData.isNotEmpty() && cardData.size >= 2
+            deck.getDeckSize() > 0
         } catch (e: UnsatisfiedLinkError) {
             // If native method fails, assume no cards
             false

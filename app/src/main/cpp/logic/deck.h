@@ -9,6 +9,7 @@ public:
 	Deck();		//constructor
 	void shuffleDeck();
 	Card draw();
+	int getDeckSize();
 
 
 private:

@@ -35,7 +35,7 @@ JNIEXPORT void JNICALL Java_com_dinari_shkuba_Board_nativeDestroy(JNIEnv* env, j
 
 JNIEXPORT void JNICALL Java_com_dinari_shkuba_Board_addToBoardNative(JNIEnv* env, jobject thiz, jint suit, jint rank) {
     jclass cls = env->GetObjectClass(thiz);
-    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jfieldID handleField = env->GetFieldID(cls, "_nativeHandle", "J");
     jlong handle = env->GetLongField(thiz, handleField);
     Board* board = reinterpret_cast<Board*>(handle);
     if (board) {
@@ -46,7 +46,7 @@ JNIEXPORT void JNICALL Java_com_dinari_shkuba_Board_addToBoardNative(JNIEnv* env
 
 JNIEXPORT jintArray JNICALL Java_com_dinari_shkuba_Board_getBoardNative(JNIEnv* env, jobject thiz) {
     jclass cls = env->GetObjectClass(thiz);
-    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jfieldID handleField = env->GetFieldID(cls, "_nativeHandle", "J");
     jlong handle = env->GetLongField(thiz, handleField);
     Board* board = reinterpret_cast<Board*>(handle);
 
@@ -68,7 +68,7 @@ JNIEXPORT jintArray JNICALL Java_com_dinari_shkuba_Board_getBoardNative(JNIEnv* 
 
 JNIEXPORT jint JNICALL Java_com_dinari_shkuba_Board_getBoardSizeNative(JNIEnv* env, jobject thiz) {
     jclass cls = env->GetObjectClass(thiz);
-    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jfieldID handleField = env->GetFieldID(cls, "_nativeHandle", "J");
     jlong handle = env->GetLongField(thiz, handleField);
     Board* board = reinterpret_cast<Board*>(handle);
     if (board) {
@@ -164,6 +164,17 @@ JNIEXPORT jintArray JNICALL Java_com_dinari_shkuba_Deck_dealCard(JNIEnv* env, jo
         }
     }
     return env->NewIntArray(0);
+}
+
+JNIEXPORT jint JNICALL Java_com_dinari_shkuba_Deck_getDeckSize(JNIEnv* env, jobject thiz) {
+    jclass cls = env->GetObjectClass(thiz);
+    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jlong handle = env->GetLongField(thiz, handleField);
+    Deck* deck = reinterpret_cast<Deck*>(handle);
+    if (deck) {
+        return static_cast<jint>(deck->getDeckSize());
+    }
+    return 0;
 }
 
 // Hand JNI Methods
