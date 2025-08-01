@@ -26,7 +26,6 @@ import java.util.Locale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.key
-import com.dinari.shkuba.Board
 import com.dinari.shkuba.CardGui
 import com.dinari.shkuba.GameScreen
 import com.dinari.shkuba.GameState
@@ -36,7 +35,6 @@ import com.dinari.shkuba.MainMenu
 import com.dinari.shkuba.OptionsScreen
 import com.dinari.shkuba.Player
 import com.dinari.shkuba.R
-import com.dinari.shkuba.Suit
 import com.shkuba.ui.PvpPlayerListScreen
 import com.shkuba.network.NetworkService
 
@@ -49,7 +47,7 @@ class MainActivity : ComponentActivity() {
                 System.loadLibrary("shkuba")
                 libraryLoaded = true
             } catch (e: UnsatisfiedLinkError) {
-                android.util.Log.e("MainActivity", "Failed to load native library: ${e.message}")
+                Log.e("MainActivity", "Failed to load native library: ${e.message}")
                 libraryLoaded = false
             }
         }
@@ -162,6 +160,9 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
             }
             gameUiState.isGameActive -> {
                 Box(modifier = Modifier.fillMaxSize()) {
+                    val selectedCard = remember { mutableStateOf<CardGui?>(null) }
+                    val selectedTableCards = remember { mutableStateOf<List<CardGui>>(emptyList()) }
+
                     GameScreen(
                         gameState = GameState(
                             players = listOf(
@@ -173,39 +174,53 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
                         ),
                         onPlayCard = { card ->
                             if (gameUiState.isPlayerTurn) {
-                                gameViewModel.playCard(card)
+                                selectedCard.value = card // Select the card when clicked
+                                selectedTableCards.value = emptyList() // Clear table card selection
+                            }
+                        },
+                        onTableCardClick = { tableCard: CardGui ->
+                            if (selectedCard.value != null) {
+                                val currentSelection = selectedTableCards.value.toMutableList()
+                                if (currentSelection.contains(tableCard)) {
+                                    currentSelection.remove(tableCard) // Deselect if already selected
+                                } else {
+                                    currentSelection.add(tableCard) // Add to selection
+                                }
+                                selectedTableCards.value = currentSelection
                             }
                         }
                     )
-                    
+
                     // Game controls
                     Column(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .padding(16.dp)
-                    ) {
+                    )
+                    {
                         Button(
                             onClick = { showInGameMenu.value = true }
                         ) {
                             Text(stringResource(R.string.options))
                         }
-                        
-                        // Drop card button
-                        if (gameUiState.isPlayerTurn && gameUiState.playerHand.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Button(
-                                onClick = { 
-                                    // Drop first card for simplicity
-                                    gameUiState.playerHand.firstOrNull()?.let { card ->
-                                        gameViewModel.dropCard(card)
-                                    }
+
+                    // Drop card button
+                    if (gameUiState.isPlayerTurn && gameViewModel.canDropCard(selectedCard.value, selectedTableCards.value)) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = {
+                                selectedCard.value?.let { card ->
+                                    gameViewModel.playCard(card, selectedTableCards.value)
+                                    selectedCard.value = null // Reset selection after playing
+                                    selectedTableCards.value = emptyList() // Clear table card selection
                                 }
-                            ) {
-                                Text("Drop Card")
                             }
+                        ) {
+                            Text("Drop Card")
                         }
                     }
-                    
+                        }
+
                     // Game status
                     Column(
                         modifier = Modifier

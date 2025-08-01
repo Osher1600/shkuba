@@ -8,9 +8,9 @@ Hand::status Hand::playCard(int cardIndex, std::vector<int> cardsToTake, Board& 
 {
 	//checks:
 	int sumCards = 0;
-	for (int i = 1; i < cardsToTake.size(); ++i)
+	for (int i : cardsToTake)
 	{
-		sumCards += myBoard.getCardByIndex(cardsToTake[i]).getRank();
+		sumCards += myBoard.getCardByIndex(i).getRank();
 	}
 	if (sumCards != cardsInHand[cardIndex].getRank())
 	{

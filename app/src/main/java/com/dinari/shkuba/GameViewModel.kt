@@ -185,12 +185,12 @@ class GameViewModel : ViewModel() {
         }
     }
 
-    fun playCard(cardGui: CardGui) {
+    fun playCard(cardGui: CardGui, selectedTableCards: List<CardGui>) {
         viewModelScope.launch {
             if (!_uiState.value.isPlayerTurn || _uiState.value.gamePhase != GamePhase.PLAYING_CARDS) {
                 return@launch
             }
-            
+
             try {
                 // Find card index in player hand
                 val cardIndex = findCardIndexInHand(cardGui, playerHand)
@@ -200,10 +200,15 @@ class GameViewModel : ViewModel() {
                     }
                     return@launch
                 }
-                
-                // Try to play the card (simplified - empty cardsToTake for now)
-                val result = playerHand.playCard(cardIndex, intArrayOf(), board)
-                
+
+                // Convert selected table cards to indices
+                val tableCardIndices = selectedTableCards.mapNotNull { tableCard ->
+                    board.getBoard().indexOfFirst { CardConverter.cardGuiMatchesNativeCard(tableCard, it) }.takeIf { it >= 0 }
+                }
+
+                // Try to play the card with selected table cards
+                val result = playerHand.playCard(cardIndex, tableCardIndices.toIntArray(), board)
+
                 if (result == Hand.STATUS_OK) {
                     updateUIState {
                         it.copy(
@@ -211,7 +216,7 @@ class GameViewModel : ViewModel() {
                             isPlayerTurn = false
                         )
                     }
-                    
+
                     updateGameUI()
                     checkHandsAndContinue()
                 } else {
@@ -219,11 +224,21 @@ class GameViewModel : ViewModel() {
                         it.copy(gameMessage = "Cannot play this card. Try dropping it instead.")
                     }
                 }
-                
+
             } catch (e: Exception) {
                 updateUIState {
                     it.copy(gameMessage = "Error playing card: ${e.message}")
                 }
+            }
+        }
+    }
+
+    fun canDropCard(selectedHandCard: CardGui?, selectedTableCards: List<CardGui>): Boolean {
+        return if (selectedHandCard == null) {
+            false
+        } else {
+            selectedTableCards.isEmpty() || board.getBoard().none { tableCard ->
+                CardConverter.cardGuiMatchesNativeCard(selectedHandCard, tableCard)
             }
         }
     }

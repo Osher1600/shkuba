@@ -101,7 +101,7 @@ fun CardView(
 }
 
 @Composable
-fun GameScreen(gameState: GameState, onPlayCard: (CardGui) -> Unit) {
+fun GameScreen(gameState: GameState, onPlayCard: (CardGui) -> Unit, onTableCardClick: (CardGui) -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -149,7 +149,7 @@ fun GameScreen(gameState: GameState, onPlayCard: (CardGui) -> Unit) {
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         gameState.tableCards.forEach { card ->
-                            CardView(card)
+                            CardView(card = card, onClick = { onTableCardClick(card) })
                         }
                     }
                 }
@@ -169,7 +169,7 @@ fun GameScreen(gameState: GameState, onPlayCard: (CardGui) -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        "${gameState.players[gameState.currentPlayerIndex].name}'s Hand",
+                        "Your Hand",
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.SemiBold
                         ),
@@ -181,11 +181,8 @@ fun GameScreen(gameState: GameState, onPlayCard: (CardGui) -> Unit) {
                             .horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        gameState.players[gameState.currentPlayerIndex].hand.forEach { card ->
-                            CardView(
-                                card = card,
-                                onClick = { onPlayCard(card) }
-                            )
+                        gameState.players.first().hand.forEach { card ->
+                            CardView(card = card, onClick = { onPlayCard(card) })
                         }
                     }
                 }

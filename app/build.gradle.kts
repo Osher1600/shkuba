@@ -28,6 +28,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            isDebuggable = true
+        }
+        getByName("debug") {
+            isJniDebuggable = true
+            isRenderscriptDebuggable = true
         }
     }
     compileOptions {
