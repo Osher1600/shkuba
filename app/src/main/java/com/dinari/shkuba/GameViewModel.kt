@@ -209,19 +209,28 @@ class GameViewModel : ViewModel() {
                 // Try to play the card with selected table cards
                 val result = playerHand.playCard(cardIndex, tableCardIndices.toIntArray(), board)
 
-                if (result == Hand.STATUS_OK) {
+                if (result == Hand.STATUS_OK)
+                {
+
                     updateUIState {
                         it.copy(
                             gameMessage = "Card played successfully!",
                             isPlayerTurn = false
                         )
                     }
-
                     updateGameUI()
                     checkHandsAndContinue()
-                } else {
+                }
+                else if (result == Hand.STATUS_ERROR_NOT_FIT)
+                {
+                    playerHand.dropCard(cardIndex, board);
+                    updateGameUI()
+                    checkHandsAndContinue()
+                }
+                else
+                {
                     updateUIState {
-                        it.copy(gameMessage = "Cannot play this card. Try dropping it instead.")
+                        it.copy(gameMessage = "Cannot play this card.")
                     }
                 }
 
@@ -242,48 +251,6 @@ class GameViewModel : ViewModel() {
             }
         }
     }
-
-    fun dropCard(cardGui: CardGui) {
-        viewModelScope.launch {
-            if (!_uiState.value.isPlayerTurn || _uiState.value.gamePhase != GamePhase.PLAYING_CARDS) {
-                return@launch
-            }
-            
-            try {
-                val cardIndex = findCardIndexInHand(cardGui, playerHand)
-                if (cardIndex == -1) {
-                    updateUIState {
-                        it.copy(gameMessage = "Card not found in hand")
-                    }
-                    return@launch
-                }
-                
-                val result = playerHand.dropCard(cardIndex, board)
-                
-                if (result == Hand.STATUS_OK) {
-                    updateUIState {
-                        it.copy(
-                            gameMessage = "Card dropped to table",
-                            isPlayerTurn = false
-                        )
-                    }
-                    
-                    updateGameUI()
-                    checkHandsAndContinue()
-                } else {
-                    updateUIState {
-                        it.copy(gameMessage = "Cannot drop card")
-                    }
-                }
-                
-            } catch (e: Exception) {
-                updateUIState {
-                    it.copy(gameMessage = "Error dropping card: ${e.message}")
-                }
-            }
-        }
-    }
-
     private suspend fun processBotTurn() {
         updateUIState {
             it.copy(

@@ -29,6 +29,11 @@ Hand::status Hand::playCard(int cardIndex, std::vector<int> cardsToTake, Board& 
 	}
 	cardsInHand.erase(cardsInHand.begin()+cardIndex);
 
+    for (int i : cardsToTake)
+    {
+        myBoard.removeCards({ i });
+    }
+
 	return STATUS_OK;
 
 

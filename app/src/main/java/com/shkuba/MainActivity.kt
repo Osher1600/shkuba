@@ -206,7 +206,7 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
 
                     // Drop card button
                     if (gameUiState.isPlayerTurn && gameViewModel.canDropCard(selectedCard.value, selectedTableCards.value)) {
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(32.dp))
                         Button(
                             onClick = {
                                 selectedCard.value?.let { card ->
@@ -216,16 +216,16 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
                                 }
                             }
                         ) {
-                            Text("Drop Card")
+                            Text("Play Card")
                         }
                     }
                         }
-
+                    
                     // Game status
                     Column(
                         modifier = Modifier
                             .align(Alignment.TopStart)
-                            .padding(16.dp)
+                            .padding(32.dp)
                     ) {
                         Text("Score: ${gameUiState.gameScore.first} - ${gameUiState.gameScore.second}")
                         Text(gameUiState.gameMessage)
