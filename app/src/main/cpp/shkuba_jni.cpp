@@ -1,10 +1,11 @@
 #include <jni.h>
 #include <android/log.h>
-#include "board.h"
-#include "card.h"
-#include "deck.h"
-#include "hand.h"
-#include "round.h"
+#include "logic/board.h"
+#include "logic/card.h"
+#include "logic/deck.h"
+#include "logic/hand.h"
+#include "logic/round.h"
+#include "logic/gameBot.h"
 
 #define LOG_TAG "ShkubaJNI"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
@@ -32,20 +33,9 @@ JNIEXPORT void JNICALL Java_com_dinari_shkuba_Board_nativeDestroy(JNIEnv* env, j
     }
 }
 
-JNIEXPORT jint JNICALL Java_com_dinari_shkuba_Board_getBoardSize(JNIEnv* env, jobject thiz) {
+JNIEXPORT void JNICALL Java_com_dinari_shkuba_Board_addToBoardNative(JNIEnv* env, jobject thiz, jint suit, jint rank) {
     jclass cls = env->GetObjectClass(thiz);
-    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
-    jlong handle = env->GetLongField(thiz, handleField);
-    Board* board = reinterpret_cast<Board*>(handle);
-    if (board) {
-        return static_cast<jint>(board->getBoardSize());
-    }
-    return 0;
-}
-
-JNIEXPORT void JNICALL Java_com_dinari_shkuba_Board_addToBoard(JNIEnv* env, jobject thiz, jint suit, jint rank) {
-    jclass cls = env->GetObjectClass(thiz);
-    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jfieldID handleField = env->GetFieldID(cls, "_nativeHandle", "J");
     jlong handle = env->GetLongField(thiz, handleField);
     Board* board = reinterpret_cast<Board*>(handle);
     if (board) {
@@ -54,9 +44,9 @@ JNIEXPORT void JNICALL Java_com_dinari_shkuba_Board_addToBoard(JNIEnv* env, jobj
     }
 }
 
-JNIEXPORT jintArray JNICALL Java_com_dinari_shkuba_Board_getBoard(JNIEnv* env, jobject thiz) {
+JNIEXPORT jintArray JNICALL Java_com_dinari_shkuba_Board_getBoardNative(JNIEnv* env, jobject thiz) {
     jclass cls = env->GetObjectClass(thiz);
-    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jfieldID handleField = env->GetFieldID(cls, "_nativeHandle", "J");
     jlong handle = env->GetLongField(thiz, handleField);
     Board* board = reinterpret_cast<Board*>(handle);
 
@@ -78,7 +68,7 @@ JNIEXPORT jintArray JNICALL Java_com_dinari_shkuba_Board_getBoard(JNIEnv* env, j
 
 JNIEXPORT jint JNICALL Java_com_dinari_shkuba_Board_getBoardSizeNative(JNIEnv* env, jobject thiz) {
     jclass cls = env->GetObjectClass(thiz);
-    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jfieldID handleField = env->GetFieldID(cls, "_nativeHandle", "J");
     jlong handle = env->GetLongField(thiz, handleField);
     Board* board = reinterpret_cast<Board*>(handle);
     if (board) {
@@ -145,16 +135,6 @@ JNIEXPORT void JNICALL Java_com_dinari_shkuba_Deck_nativeDestroy(JNIEnv* env, jo
     }
 }
 
-JNIEXPORT void JNICALL Java_com_dinari_shkuba_Deck_shuffle(JNIEnv* env, jobject thiz) {
-    jclass cls = env->GetObjectClass(thiz);
-    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
-    jlong handle = env->GetLongField(thiz, handleField);
-    Deck* deck = reinterpret_cast<Deck*>(handle);
-    if (deck) {
-        deck->shuffleDeck();
-    }
-}
-
 JNIEXPORT jintArray JNICALL Java_com_dinari_shkuba_Deck_dealCard(JNIEnv* env, jobject thiz) {
     jclass cls = env->GetObjectClass(thiz);
     jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
@@ -174,6 +154,17 @@ JNIEXPORT jintArray JNICALL Java_com_dinari_shkuba_Deck_dealCard(JNIEnv* env, jo
         }
     }
     return env->NewIntArray(0);
+}
+
+JNIEXPORT jint JNICALL Java_com_dinari_shkuba_Deck_getDeckSize(JNIEnv* env, jobject thiz) {
+    jclass cls = env->GetObjectClass(thiz);
+    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jlong handle = env->GetLongField(thiz, handleField);
+    Deck* deck = reinterpret_cast<Deck*>(handle);
+    if (deck) {
+        return static_cast<jint>(deck->getDeckSize());
+    }
+    return 0;
 }
 
 // Hand JNI Methods
@@ -243,6 +234,209 @@ JNIEXPORT jint JNICALL Java_com_dinari_shkuba_NativeCard_nativeGetRank(JNIEnv* e
         return card->getRank();
     }
     return -1;
+}
+
+// Round JNI Methods
+JNIEXPORT jlong JNICALL Java_com_dinari_shkuba_Round_nativeCreate(JNIEnv* env, jobject thiz, jint firstPlayer) {
+    try {
+        Round* round = new Round(static_cast<players>(firstPlayer));
+        LOGI("Round created successfully with first player: %d", firstPlayer);
+        return reinterpret_cast<jlong>(round);
+    } catch (const std::exception& e) {
+        LOGE("Error creating Round: %s", e.what());
+        return 0;
+    }
+}
+
+JNIEXPORT void JNICALL Java_com_dinari_shkuba_Round_nativeDestroy(JNIEnv* env, jobject thiz, jlong handle) {
+    Round* round = reinterpret_cast<Round*>(handle);
+    if (round) {
+        delete round;
+        LOGI("Round destroyed successfully");
+    }
+}
+
+JNIEXPORT jint JNICALL Java_com_dinari_shkuba_Round_getP1Points(JNIEnv* env, jobject thiz) {
+    jclass cls = env->GetObjectClass(thiz);
+    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jlong handle = env->GetLongField(thiz, handleField);
+    Round* round = reinterpret_cast<Round*>(handle);
+    if (round) {
+        return static_cast<jint>(round->getP1Points());
+    }
+    return 0;
+}
+
+JNIEXPORT jint JNICALL Java_com_dinari_shkuba_Round_getP2Points(JNIEnv* env, jobject thiz) {
+    jclass cls = env->GetObjectClass(thiz);
+    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jlong handle = env->GetLongField(thiz, handleField);
+    Round* round = reinterpret_cast<Round*>(handle);
+    if (round) {
+        return static_cast<jint>(round->getP2Points());
+    }
+    return 0;
+}
+
+JNIEXPORT void JNICALL Java_com_dinari_shkuba_Round_firstMiniRound(JNIEnv* env, jobject thiz, jboolean choice) {
+    jclass cls = env->GetObjectClass(thiz);
+    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jlong handle = env->GetLongField(thiz, handleField);
+    Round* round = reinterpret_cast<Round*>(handle);
+    if (round) {
+        round->firstMiniRound(choice == JNI_TRUE);
+        LOGI("First mini round executed with choice: %s", choice ? "true" : "false");
+    }
+}
+
+JNIEXPORT void JNICALL Java_com_dinari_shkuba_Round_giveCardsToPlayers(JNIEnv* env, jobject thiz) {
+    jclass cls = env->GetObjectClass(thiz);
+    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jlong handle = env->GetLongField(thiz, handleField);
+    Round* round = reinterpret_cast<Round*>(handle);
+    if (round) {
+        round->giveCardsToPlayers();
+        LOGI("Cards given to players");
+    }
+}
+
+JNIEXPORT void JNICALL Java_com_dinari_shkuba_Round_countPiles(JNIEnv* env, jobject thiz) {
+    jclass cls = env->GetObjectClass(thiz);
+    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jlong handle = env->GetLongField(thiz, handleField);
+    Round* round = reinterpret_cast<Round*>(handle);
+    if (round) {
+        round->countPiles();
+        LOGI("Piles counted");
+    }
+}
+
+JNIEXPORT void JNICALL Java_com_dinari_shkuba_Round_addToP1Pile(JNIEnv* env, jobject thiz, jint suit, jint rank) {
+    jclass cls = env->GetObjectClass(thiz);
+    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jlong handle = env->GetLongField(thiz, handleField);
+    Round* round = reinterpret_cast<Round*>(handle);
+    if (round) {
+        Card card(static_cast<Card::suit>(suit), rank);
+        round->addToP1Pile(card);
+    }
+}
+
+JNIEXPORT void JNICALL Java_com_dinari_shkuba_Round_addToP2Pile(JNIEnv* env, jobject thiz, jint suit, jint rank) {
+    jclass cls = env->GetObjectClass(thiz);
+    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jlong handle = env->GetLongField(thiz, handleField);
+    Round* round = reinterpret_cast<Round*>(handle);
+    if (round) {
+        Card card(static_cast<Card::suit>(suit), rank);
+        round->addToP2Pile(card);
+    }
+}
+
+JNIEXPORT jobject JNICALL Java_com_dinari_shkuba_Round_getStartCard(JNIEnv* env, jobject thiz) {
+    jclass cls = env->GetObjectClass(thiz);
+    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jlong handle = env->GetLongField(thiz, handleField);
+    Round* round = reinterpret_cast<Round*>(handle);
+
+    if (round) {
+        Card startCard = round->getStartCard();
+        jclass cardClass = env->FindClass("com/dinari/shkuba/NativeCard");
+        jmethodID cardConstructor = env->GetMethodID(cardClass, "<init>", "(II)V");
+        return env->NewObject(cardClass, cardConstructor, static_cast<jint>(startCard.getSuit()), static_cast<jint>(startCard.getRank()));
+    }
+    return nullptr;
+}
+
+// GameBot JNI Methods
+JNIEXPORT jlong JNICALL Java_com_dinari_shkuba_GameBot_nativeCreate(JNIEnv* env, jobject thiz) {
+    try {
+        GameBot* gameBot = new GameBot();
+        LOGI("GameBot created successfully");
+        return reinterpret_cast<jlong>(gameBot);
+    } catch (const std::exception& e) {
+        LOGE("Error creating GameBot: %s", e.what());
+        return 0;
+    }
+}
+
+JNIEXPORT void JNICALL Java_com_dinari_shkuba_GameBot_nativeDestroy(JNIEnv* env, jobject thiz, jlong handle) {
+    GameBot* gameBot = reinterpret_cast<GameBot*>(handle);
+    if (gameBot) {
+        delete gameBot;
+        LOGI("GameBot destroyed successfully");
+    }
+}
+
+// Extended Hand JNI Methods
+JNIEXPORT jint JNICALL Java_com_dinari_shkuba_Hand_playCard(JNIEnv* env, jobject thiz, jint cardIndex, jintArray cardsToTake, jlong boardHandle) {
+    jclass cls = env->GetObjectClass(thiz);
+    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jlong handle = env->GetLongField(thiz, handleField);
+    Hand* hand = reinterpret_cast<Hand*>(handle);
+    Board* board = reinterpret_cast<Board*>(boardHandle);
+    
+    if (hand && board) {
+        jint* cardsArray = env->GetIntArrayElements(cardsToTake, nullptr);
+        jsize arrayLength = env->GetArrayLength(cardsToTake);
+        
+        std::vector<int> cardsToTakeVec;
+        for (int i = 0; i < arrayLength; i++) {
+            cardsToTakeVec.push_back(cardsArray[i]);
+        }
+        
+        Hand::status result = hand->playCard(cardIndex, cardsToTakeVec, *board);
+        
+        env->ReleaseIntArrayElements(cardsToTake, cardsArray, JNI_ABORT);
+        return static_cast<jint>(result);
+    }
+    return static_cast<jint>(Hand::STATUS_ERROR_NOT_FIT);
+}
+
+JNIEXPORT jint JNICALL Java_com_dinari_shkuba_Hand_dropCard(JNIEnv* env, jobject thiz, jint cardIndex, jlong boardHandle) {
+    jclass cls = env->GetObjectClass(thiz);
+    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jlong handle = env->GetLongField(thiz, handleField);
+    Hand* hand = reinterpret_cast<Hand*>(handle);
+    Board* board = reinterpret_cast<Board*>(boardHandle);
+    
+    if (hand && board) {
+        Hand::status result = hand->dropCard(cardIndex, *board);
+        return static_cast<jint>(result);
+    }
+    return static_cast<jint>(Hand::STATUS_ERROR_NOT_FIT);
+}
+
+JNIEXPORT jintArray JNICALL Java_com_dinari_shkuba_Hand_getCardByIndex(JNIEnv* env, jobject thiz, jint index) {
+    jclass cls = env->GetObjectClass(thiz);
+    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jlong handle = env->GetLongField(thiz, handleField);
+    Hand* hand = reinterpret_cast<Hand*>(handle);
+    
+    if (hand) {
+        try {
+            Card card = hand->getCardByIndex(index);
+            jintArray result = env->NewIntArray(2);
+            jint cardData[2] = {static_cast<jint>(card.getSuit()), static_cast<jint>(card.getRank())};
+            env->SetIntArrayRegion(result, 0, 2, cardData);
+            return result;
+        } catch (const std::exception& e) {
+            LOGE("Error getting card by index: %s", e.what());
+            return env->NewIntArray(0);
+        }
+    }
+    return env->NewIntArray(0);
+}
+
+JNIEXPORT jint JNICALL Java_com_dinari_shkuba_Hand_getHandSize(JNIEnv* env, jobject thiz) {
+    jclass cls = env->GetObjectClass(thiz);
+    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jlong handle = env->GetLongField(thiz, handleField);
+    Hand* hand = reinterpret_cast<Hand*>(handle);
+    if (hand) {
+        return static_cast<jint>(hand->getHandSize());
+    }
+    return 0;
 }
 
 } // extern "C"

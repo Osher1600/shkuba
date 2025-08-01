@@ -101,7 +101,21 @@ fun CardView(
 }
 
 @Composable
-fun GameScreen(gameState: GameState, onPlayCard: (CardGui) -> Unit) {
+fun GameScreen(
+    gameState: GameState,
+    onPlayCard: (CardGui) -> Unit,
+    onTableCardClick: (CardGui) -> Unit,
+    isChoosingStartCard: Boolean = false,
+    startCard: CardGui? = null,
+    onChooseStartCard: ((Boolean) -> Unit)? = null
+) {
+    if (isChoosingStartCard && startCard != null && onChooseStartCard != null) {
+        StartCardDialog(
+            startCard = startCard,
+            onTake = { onChooseStartCard(true) },
+            onSkip = { onChooseStartCard(false) }
+        )
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -149,7 +163,7 @@ fun GameScreen(gameState: GameState, onPlayCard: (CardGui) -> Unit) {
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         gameState.tableCards.forEach { card ->
-                            CardView(card)
+                            CardView(card = card, onClick = { onTableCardClick(card) })
                         }
                     }
                 }
@@ -169,7 +183,7 @@ fun GameScreen(gameState: GameState, onPlayCard: (CardGui) -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        "${gameState.players[gameState.currentPlayerIndex].name}'s Hand",
+                        "Your Hand",
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.SemiBold
                         ),
@@ -181,11 +195,8 @@ fun GameScreen(gameState: GameState, onPlayCard: (CardGui) -> Unit) {
                             .horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        gameState.players[gameState.currentPlayerIndex].hand.forEach { card ->
-                            CardView(
-                                card = card,
-                                onClick = { onPlayCard(card) }
-                            )
+                        gameState.players.first().hand.forEach { card ->
+                            CardView(card = card, onClick = { onPlayCard(card) })
                         }
                     }
                 }
@@ -522,6 +533,33 @@ fun OptionsScreen(
                 )
             )
         }
+    }
+}
+
+@Composable
+fun StartCardDialog(
+    startCard: CardGui?,
+    onTake: () -> Unit,
+    onSkip: () -> Unit
+) {
+    if (startCard != null) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text("Start Card Choice") },
+            text = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Do you want to take this card as one of your hand cards?")
+                    Spacer(modifier = Modifier.height(12.dp))
+                    CardView(card = startCard, onClick = {})
+                }
+            },
+            confirmButton = {
+                Button(onClick = onTake) { Text("Take") }
+            },
+            dismissButton = {
+                Button(onClick = onSkip) { Text("Skip") }
+            }
+        )
     }
 }
 

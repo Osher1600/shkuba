@@ -183,3 +183,12 @@ void GameBot::playCard(Hand botHand, Board board)
 	}
 	
 }
+
+bool GameBot::firstMiniRoundChoice(Card firstCard)
+{
+	if (firstCard.getRank()<7) 
+	{
+		return false; 
+	}
+	return true;
+}

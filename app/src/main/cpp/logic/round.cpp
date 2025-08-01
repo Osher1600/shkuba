@@ -132,3 +132,7 @@ void Round::giveCardsToPlayers()
 
 
 }
+
+Card Round::getStartCard() const {
+    return m_startCard;
+}

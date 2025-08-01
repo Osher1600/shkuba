@@ -5,7 +5,12 @@ class NativeCard(suit: Int, rank: Int) {
     private var nativeHandle: Long = 0
 
     init {
-        nativeHandle = nativeCreate(suit, rank)
+        try {
+            nativeHandle = nativeCreate(suit, rank)
+        } catch (e: UnsatisfiedLinkError) {
+            android.util.Log.e("NativeCard", "Failed to create native card: ${e.message}")
+            nativeHandle = 0
+        }
     }
 
     // Secondary constructor for convenience
@@ -23,8 +28,21 @@ class NativeCard(suit: Int, rank: Int) {
     // JNI: Get card rank
     private external fun nativeGetRank(): Int
 
-    fun getSuit(): Int = nativeGetSuit()
-    fun getRank(): Int = nativeGetRank()
+    fun getSuit(): Int {
+        return try {
+            if (nativeHandle != 0L) nativeGetSuit() else 0
+        } catch (e: UnsatisfiedLinkError) {
+            0 // Default to SPADES
+        }
+    }
+    
+    fun getRank(): Int {
+        return try {
+            if (nativeHandle != 0L) nativeGetRank() else 1
+        } catch (e: UnsatisfiedLinkError) {
+            1 // Default to ACE
+        }
+    }
 
     // Helper functions for Kotlin convenience
     fun getSuitEnum(): Suit = Suit.entries[getSuit()]
@@ -54,8 +72,6 @@ class NativeCard(suit: Int, rank: Int) {
     }
 
     companion object {
-        init {
-            System.loadLibrary("shkuba")
-        }
+        // Library loaded in MainActivity
     }
 }
