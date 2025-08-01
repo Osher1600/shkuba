@@ -167,27 +167,32 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
                         gameState = GameState(
                             players = listOf(
                                 Player("You", gameUiState.playerHand),
-                                Player("Bot", emptyList()) // Don't show bot's cards
+                                Player("Bot", emptyList())
                             ),
                             tableCards = gameUiState.tableCards,
-                            currentPlayerIndex = 0 // Always show player's perspective
+                            currentPlayerIndex = 0
                         ),
                         onPlayCard = { card ->
                             if (gameUiState.isPlayerTurn) {
-                                selectedCard.value = card // Select the card when clicked
-                                selectedTableCards.value = emptyList() // Clear table card selection
+                                selectedCard.value = card
+                                selectedTableCards.value = emptyList()
                             }
                         },
                         onTableCardClick = { tableCard: CardGui ->
                             if (selectedCard.value != null) {
                                 val currentSelection = selectedTableCards.value.toMutableList()
                                 if (currentSelection.contains(tableCard)) {
-                                    currentSelection.remove(tableCard) // Deselect if already selected
+                                    currentSelection.remove(tableCard)
                                 } else {
-                                    currentSelection.add(tableCard) // Add to selection
+                                    currentSelection.add(tableCard)
                                 }
                                 selectedTableCards.value = currentSelection
                             }
+                        },
+                        isChoosingStartCard = gameUiState.isChoosingStartCard,
+                        startCard = gameUiState.startCard,
+                        onChooseStartCard = { take ->
+                            gameViewModel.onUserChooseStartCard(take)
                         }
                     )
 

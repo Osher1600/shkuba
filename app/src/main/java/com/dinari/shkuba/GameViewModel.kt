@@ -19,7 +19,9 @@ data class GameUIState(
     val gameMessage: String = "",
     val isPlayerTurn: Boolean = true,
     val gamePhase: GamePhase = GamePhase.NOT_STARTED,
-    val winner: String? = null
+    val winner: String? = null,
+    val startCard: CardGui? = null, // The card that can be chosen at round start
+    val isChoosingStartCard: Boolean = false // True if user/bot is choosing start card
 )
 
 enum class GamePhase {
@@ -60,32 +62,42 @@ class GameViewModel : ViewModel() {
                 }
                 return
             }
-            
+
             // Create new round with current first player
             currentRound = game.createNewRound()
-            
+
             // Create new deck and shuffle
             deck = Deck()
-            deck.shuffle()
-            
+
             // Reset hands and board
             playerHand = Hand()
             botHand = Hand()
             board = Board()
-            
+
+            // Get the start card from the round
+            val startCardNative = currentRound?.getStartCard()
+            val startCardGui = startCardNative?.let { CardConverter.nativeCardToCardGui(it) }
+
             updateUIState {
                 it.copy(
                     isGameActive = true,
                     gamePhase = GamePhase.FIRST_MINI_ROUND,
                     currentPlayer = game.getFirstPlayer(),
                     gameScore = Pair(game.getP1Points(), game.getP2Points()),
-                    gameMessage = "Starting new round..."
+                    gameMessage = "Choose if you want to take the start card as one of your hand cards.",
+                    startCard = startCardGui,
+                    isChoosingStartCard = true
                 )
             }
-            
-            // Execute first mini round
-            executeFirstMiniRound()
-            
+
+            // Prompt user or bot to choose start card
+            if (game.getFirstPlayer() == Round.P1) {
+                // Wait for user input via UI (call onUserChooseStartCard from UI)
+            } else {
+                // Bot chooses automatically
+                handleBotChooseStartCard()
+            }
+
         } catch (e: UnsatisfiedLinkError) {
             updateUIState {
                 it.copy(gameMessage = "Error: Native method not found - ${e.message}")
@@ -97,56 +109,37 @@ class GameViewModel : ViewModel() {
         }
     }
 
-    private suspend fun executeFirstMiniRound() {
-        try {
-            currentRound?.firstMiniRound(true) // Choice parameter - can be made configurable
-            
+    fun onUserChooseStartCard(takeStartCard: Boolean) {
+        viewModelScope.launch {
             updateUIState {
-                it.copy(
-                    gamePhase = GamePhase.PLAYING_CARDS,
-                    gameMessage = "First mini round complete. Starting card play..."
-                )
+                it.copy(isChoosingStartCard = false)
             }
-            
-            // Give initial cards to players
-            giveCardsToPlayers()
-            
-        } catch (e: Exception) {
-            updateUIState {
-                it.copy(gameMessage = "Error in first mini round: ${e.message}")
-            }
+            executeFirstMiniRound(takeStartCard)
         }
     }
 
-    private suspend fun giveCardsToPlayers() {
+    private suspend fun handleBotChooseStartCard() {
+        // hardcoded for simplicity, can be improved with actual bot logic
+        val takeStartCard = true;
+        updateUIState {
+            it.copy(isChoosingStartCard = false)
+        }
+        delay(1000)
+        executeFirstMiniRound(takeStartCard)
+    }
+
+    private suspend fun executeFirstMiniRound(takeStartCard: Boolean) {
         try {
-            currentRound?.giveCardsToPlayers()
-            
-            // Deal cards from deck to hands (3 cards each as per NUM_OF_HAND)
-            repeat(3) {
-                // Deal to player
-                val playerCardData = deck.dealCard()
-                if (playerCardData.size >= 2) {
-                    playerHand.addCard(playerCardData[0], playerCardData[1])
-                } else {
-                    updateUIState {
-                        it.copy(gameMessage = "Warning: Invalid card data from deck")
-                    }
-                    return
-                }
-                
-                // Deal to bot
-                val botCardData = deck.dealCard()
-                if (botCardData.size >= 2) {
-                    botHand.addCard(botCardData[0], botCardData[1])  
-                } else {
-                    updateUIState {
-                        it.copy(gameMessage = "Warning: Invalid card data from deck")
-                    }
-                    return
-                }
+            currentRound?.firstMiniRound(takeStartCard)
+
+            updateUIState {
+                it.copy(
+                    gamePhase = GamePhase.PLAYING_CARDS,
+                    gameMessage = "First mini round complete. Starting card play...",
+                    startCard = null
+                )
             }
-            
+
             // Add cards to board (4 cards as per NUM_OF_BOARD)
             repeat(4) {
                 val cardData = deck.dealCard()
@@ -159,9 +152,9 @@ class GameViewModel : ViewModel() {
                     return
                 }
             }
-            
+
             updateGameUI()
-            
+
             // Start player turns
             if (game.getFirstPlayer() == Round.P1) {
                 updateUIState {
@@ -173,7 +166,70 @@ class GameViewModel : ViewModel() {
             } else {
                 processBotTurn()
             }
-            
+
+        } catch (e: Exception) {
+            updateUIState {
+                it.copy(gameMessage = "Error in first mini round: ${e.message}")
+            }
+        }
+    }
+
+    private suspend fun giveCardsToPlayers() {
+        try {
+            currentRound?.giveCardsToPlayers()
+
+            // Deal cards from deck to hands (3 cards each as per NUM_OF_HAND)
+            repeat(3) {
+                // Deal to player
+                val playerCardData = deck.dealCard()
+                if (playerCardData.size >= 2) {
+                    playerHand.addCard(playerCardData[0], playerCardData[1])
+                } else {
+                    updateUIState {
+                        it.copy(gameMessage = "Warning: Invalid card data from deck")
+                    }
+                    return
+                }
+
+                // Deal to bot
+                val botCardData = deck.dealCard()
+                if (botCardData.size >= 2) {
+                    botHand.addCard(botCardData[0], botCardData[1])
+                } else {
+                    updateUIState {
+                        it.copy(gameMessage = "Warning: Invalid card data from deck")
+                    }
+                    return
+                }
+            }
+
+            // Add cards to board (4 cards as per NUM_OF_BOARD)
+            repeat(4) {
+                val cardData = deck.dealCard()
+                if (cardData.size >= 2) {
+                    board.addToBoard(cardData[0], cardData[1])
+                } else {
+                    updateUIState {
+                        it.copy(gameMessage = "Warning: Invalid card data for board")
+                    }
+                    return
+                }
+            }
+
+            updateGameUI()
+
+            // Start player turns
+            if (game.getFirstPlayer() == Round.P1) {
+                updateUIState {
+                    it.copy(
+                        isPlayerTurn = true,
+                        gameMessage = "Your turn! Play a card or drop one."
+                    )
+                }
+            } else {
+                processBotTurn()
+            }
+
         } catch (e: UnsatisfiedLinkError) {
             updateUIState {
                 it.copy(gameMessage = "Error: Native method not available - ${e.message}")
@@ -203,14 +259,15 @@ class GameViewModel : ViewModel() {
 
                 // Convert selected table cards to indices
                 val tableCardIndices = selectedTableCards.mapNotNull { tableCard ->
-                    board.getBoard().indexOfFirst { CardConverter.cardGuiMatchesNativeCard(tableCard, it) }.takeIf { it >= 0 }
+                    board.getBoard()
+                        .indexOfFirst { CardConverter.cardGuiMatchesNativeCard(tableCard, it) }
+                        .takeIf { it >= 0 }
                 }
 
                 // Try to play the card with selected table cards
                 val result = playerHand.playCard(cardIndex, tableCardIndices.toIntArray(), board)
 
-                if (result == Hand.STATUS_OK)
-                {
+                if (result == Hand.STATUS_OK) {
 
                     updateUIState {
                         it.copy(
@@ -220,15 +277,11 @@ class GameViewModel : ViewModel() {
                     }
                     updateGameUI()
                     checkHandsAndContinue()
-                }
-                else if (result == Hand.STATUS_ERROR_NOT_FIT)
-                {
+                } else if (result == Hand.STATUS_ERROR_NOT_FIT) {
                     playerHand.dropCard(cardIndex, board);
                     updateGameUI()
                     checkHandsAndContinue()
-                }
-                else
-                {
+                } else {
                     updateUIState {
                         it.copy(gameMessage = "Cannot play this card.")
                     }
@@ -251,6 +304,7 @@ class GameViewModel : ViewModel() {
             }
         }
     }
+
     private suspend fun processBotTurn() {
         updateUIState {
             it.copy(
@@ -258,33 +312,35 @@ class GameViewModel : ViewModel() {
                 isPlayerTurn = false
             )
         }
-        
+
         delay(1000) // Add delay for better UX
-        
+
         try {
             val botMove = gameBot.makeMove(botHand, board)
-            
+
             when (botMove) {
                 is GameBot.BotMove.PlayCard -> {
                     updateUIState {
                         it.copy(gameMessage = "Bot played a card")
                     }
                 }
+
                 is GameBot.BotMove.DropCard -> {
                     updateUIState {
                         it.copy(gameMessage = "Bot dropped a card")
                     }
                 }
+
                 is GameBot.BotMove.NoMove -> {
                     updateUIState {
                         it.copy(gameMessage = "Bot has no moves")
                     }
                 }
             }
-            
+
             updateGameUI()
             checkHandsAndContinue()
-            
+
         } catch (e: Exception) {
             updateUIState {
                 it.copy(gameMessage = "Error in bot turn: ${e.message}")
@@ -295,7 +351,7 @@ class GameViewModel : ViewModel() {
     private suspend fun checkHandsAndContinue() {
         val playerHandSize = playerHand.getHandSize()
         val botHandSize = botHand.getHandSize()
-        
+
         if (playerHandSize == 0 && botHandSize == 0) {
             // Both hands empty - give new cards or end round
             if (deckHasCards()) {
@@ -317,7 +373,7 @@ class GameViewModel : ViewModel() {
             updateUIState {
                 it.copy(isPlayerTurn = nextPlayerTurn)
             }
-            
+
             if (!nextPlayerTurn) {
                 // Bot's turn
                 delay(500)
@@ -333,13 +389,13 @@ class GameViewModel : ViewModel() {
     private suspend fun endRound() {
         try {
             currentRound?.countPiles()
-            
+
             val roundP1Points = currentRound?.getP1Points() ?: 0
             val roundP2Points = currentRound?.getP2Points() ?: 0
-            
+
             game.addToP1Points(roundP1Points)
             game.addToP2Points(roundP2Points)
-            
+
             updateUIState {
                 it.copy(
                     gamePhase = GamePhase.ROUND_COMPLETE,
@@ -348,9 +404,9 @@ class GameViewModel : ViewModel() {
                     gameMessage = "Round complete! P1: $roundP1Points, P2: $roundP2Points"
                 )
             }
-            
+
             delay(2000)
-            
+
             if (game.isGameOver()) {
                 endGame()
             } else {
@@ -358,7 +414,7 @@ class GameViewModel : ViewModel() {
                 game.changeFirstPlayer()
                 startNewRound()
             }
-            
+
         } catch (e: Exception) {
             updateUIState {
                 it.copy(gameMessage = "Error ending round: ${e.message}")
@@ -393,7 +449,7 @@ class GameViewModel : ViewModel() {
             val playerCards = playerHand.getAllCards().map { CardConverter.nativeCardToCardGui(it) }
             val botCards = botHand.getAllCards().map { CardConverter.nativeCardToCardGui(it) }
             val tableCards = board.getBoard().map { CardConverter.nativeCardToCardGui(it) }
-            
+
             updateUIState { currentState ->
                 currentState.copy(
                     playerHand = playerCards,
@@ -427,3 +483,4 @@ class GameViewModel : ViewModel() {
         _uiState.value = update(_uiState.value)
     }
 }
+

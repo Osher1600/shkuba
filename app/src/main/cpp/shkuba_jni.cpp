@@ -135,16 +135,6 @@ JNIEXPORT void JNICALL Java_com_dinari_shkuba_Deck_nativeDestroy(JNIEnv* env, jo
     }
 }
 
-JNIEXPORT void JNICALL Java_com_dinari_shkuba_Deck_shuffle(JNIEnv* env, jobject thiz) {
-    jclass cls = env->GetObjectClass(thiz);
-    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
-    jlong handle = env->GetLongField(thiz, handleField);
-    Deck* deck = reinterpret_cast<Deck*>(handle);
-    if (deck) {
-        deck->shuffleDeck();
-    }
-}
-
 JNIEXPORT jintArray JNICALL Java_com_dinari_shkuba_Deck_dealCard(JNIEnv* env, jobject thiz) {
     jclass cls = env->GetObjectClass(thiz);
     jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
@@ -341,6 +331,21 @@ JNIEXPORT void JNICALL Java_com_dinari_shkuba_Round_addToP2Pile(JNIEnv* env, job
         Card card(static_cast<Card::suit>(suit), rank);
         round->addToP2Pile(card);
     }
+}
+
+JNIEXPORT jobject JNICALL Java_com_dinari_shkuba_Round_getStartCard(JNIEnv* env, jobject thiz) {
+    jclass cls = env->GetObjectClass(thiz);
+    jfieldID handleField = env->GetFieldID(cls, "nativeHandle", "J");
+    jlong handle = env->GetLongField(thiz, handleField);
+    Round* round = reinterpret_cast<Round*>(handle);
+
+    if (round) {
+        Card startCard = round->getStartCard();
+        jclass cardClass = env->FindClass("com/dinari/shkuba/NativeCard");
+        jmethodID cardConstructor = env->GetMethodID(cardClass, "<init>", "(II)V");
+        return env->NewObject(cardClass, cardConstructor, static_cast<jint>(startCard.getSuit()), static_cast<jint>(startCard.getRank()));
+    }
+    return nullptr;
 }
 
 // GameBot JNI Methods

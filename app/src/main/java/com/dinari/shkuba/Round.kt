@@ -35,6 +35,9 @@ class Round(firstPlayer: Int) {
     // JNI: Add card to P2 pile  
     external fun addToP2Pile(suit: Int, rank: Int)
 
+    // JNI: Get the start card
+    external fun getStartCard(): NativeCard
+
     // Helper methods for enum support
     fun addToP1Pile(card: NativeCard) {
         addToP1Pile(card.getSuit(), card.getRank())
