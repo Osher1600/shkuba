@@ -16,13 +16,6 @@ Deck::Deck()
 	shuffleDeck();
 }
 
-void Deck::shuffleDeck()
-{
-	std::random_device rd;
-	std::mt19937 g(rd());
-	std::shuffle(cards.begin(), cards.end(), g);
-}
-
 Card Deck::draw()
 {
 	if (cards.empty()) {
@@ -33,9 +26,18 @@ Card Deck::draw()
 	cards.pop_back();
 	return drawCard;
 }
-
 int Deck::getDeckSize()
 {
 	return cards.size();
 }
+void Deck::shuffleDeck()
+{
+	std::random_device rd;
+	std::mt19937 g(rd());
+	std::shuffle(cards.begin(), cards.end(), g);
+}
+
+
+
+
 

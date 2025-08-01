@@ -7,12 +7,12 @@ class Deck {
 
 public:
 	Deck();		//constructor
-	void shuffleDeck();
+	
 	Card draw();
 	int getDeckSize();
 
 
 private:
 	std::vector<Card> cards;
-
+	void shuffleDeck();
 };
