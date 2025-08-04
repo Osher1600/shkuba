@@ -16,6 +16,20 @@ Deck::Deck()
 	shuffleDeck();
 }
 
+Card Deck::draw()
+{
+	if (cards.empty()) {
+		// Return a default card if deck is empty to avoid crash
+		return Card(Card::S, 1);
+	}
+	Card drawCard = cards.back();
+	cards.pop_back();
+	return drawCard;
+}
+int Deck::getDeckSize()
+{
+	return cards.size();
+}
 void Deck::shuffleDeck()
 {
 	std::random_device rd;
@@ -23,11 +37,7 @@ void Deck::shuffleDeck()
 	std::shuffle(cards.begin(), cards.end(), g);
 }
 
-Card Deck::draw()
-{
-	Card drawCard = cards.back();
-	cards.pop_back();
-	return drawCard;
 
-}
+
+
 

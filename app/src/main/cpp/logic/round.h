@@ -11,7 +11,8 @@ enum players { P1, P2 };
 class Round
 {
 public:
-	Round(players firstPlayer);
+	explicit Round(players firstPlayer);
+    Card getStartCard() const;
 	int getP1Points();
 	int getP2Points();
 

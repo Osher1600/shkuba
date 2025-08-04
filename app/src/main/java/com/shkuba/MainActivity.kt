@@ -2,6 +2,7 @@ package com.shkuba
 
 import android.content.res.Configuration
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -13,41 +14,58 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.shkuba.ui.theme.ShkubaTheme
 import java.util.Locale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.key
-import com.dinari.shkuba.Board
 import com.dinari.shkuba.CardGui
 import com.dinari.shkuba.GameScreen
 import com.dinari.shkuba.GameState
+import com.dinari.shkuba.GameViewModel
 import com.dinari.shkuba.InGameMenu
 import com.dinari.shkuba.MainMenu
 import com.dinari.shkuba.OptionsScreen
 import com.dinari.shkuba.Player
 import com.dinari.shkuba.R
-import com.dinari.shkuba.Suit
 import com.shkuba.ui.PvpPlayerListScreen
 import com.shkuba.network.NetworkService
 
 class MainActivity : ComponentActivity() {
     companion object {
+        private var libraryLoaded = false
+        
         init {
-            System.loadLibrary("shkuba") // Replace with your actual library name if different
+            try {
+                System.loadLibrary("shkuba")
+                libraryLoaded = true
+            } catch (e: UnsatisfiedLinkError) {
+                Log.e("MainActivity", "Failed to load native library: ${e.message}")
+                libraryLoaded = false
+            }
         }
+        
+        fun isLibraryLoaded(): Boolean = libraryLoaded
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Check if native library loaded successfully
+        if (!isLibraryLoaded()) {
+            Log.e("MainActivity", "Native library failed to load. Some features may not work.")
+        }
+        
         enableEdgeToEdge()
         setContent {
             val isDarkMode = remember { mutableStateOf(false) }
-            val board = Board()
             val localeState = remember { mutableStateOf(Locale.getDefault()) }
             val context = LocalContext.current
             val config = Configuration(context.resources.configuration)
@@ -72,17 +90,11 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeState: MutableState<Locale>) {
     val showMenu = remember { mutableStateOf(true) }
     val showOptions = remember { mutableStateOf(false) }
-    val gameState = remember {
-        mutableStateOf(
-            GameState(
-                players = listOf(),
-                tableCards = listOf(),
-                currentPlayerIndex = 0
-            )
-        )
-    }
     val showInGameMenu = remember { mutableStateOf(false) }
     val showPvpList = remember { mutableStateOf(false) }
+    val gameViewModel: GameViewModel = viewModel()
+    val gameUiState by gameViewModel.uiState.collectAsState()
+    
     val supportedLanguages = listOf("English", "Hebrew", "Hindi")
     val languageToLocale = mapOf(
         "English" to Locale("en"),
@@ -117,22 +129,7 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
             showMenu.value -> {
                 MainMenu(
                     onStartGame = {
-                        val player = Player("You", listOf(
-                            CardGui("A", Suit.Spades),
-                            CardGui("7", Suit.Diamonds),
-                            CardGui("K", Suit.Clubs),
-                            CardGui("3", Suit.Hearts)
-                        ))
-                        val opponent = Player("Opponent", listOf())
-                        val tableCards = listOf(
-                            CardGui("2", Suit.Spades),
-                            CardGui("J", Suit.Diamonds)
-                        )
-                        gameState.value = GameState(
-                            players = listOf(player, opponent),
-                            tableCards = tableCards,
-                            currentPlayerIndex = 0
-                        )
+                        gameViewModel.startNewGame()
                         showMenu.value = false
                     },
                     onOptions = { showOptions.value = true },
@@ -161,14 +158,88 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
                     titleLabel = stringResource(R.string.game_menu)
                 )
             }
-            else -> {
+            gameUiState.isGameActive -> {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    GameScreen(gameState = gameState.value, onPlayCard = { /* TODO: Play card logic */ })
-                    Button(
-                        onClick = { showInGameMenu.value = true },
-                        modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
+                    val selectedCard = remember { mutableStateOf<CardGui?>(null) }
+                    val selectedTableCards = remember { mutableStateOf<List<CardGui>>(emptyList()) }
+
+                    GameScreen(
+                        gameState = GameState(
+                            players = listOf(
+                                Player("You", gameUiState.playerHand),
+                                Player("Bot", emptyList())
+                            ),
+                            tableCards = gameUiState.tableCards,
+                            currentPlayerIndex = 0
+                        ),
+                        onPlayCard = { card ->
+                            if (gameUiState.isPlayerTurn) {
+                                selectedCard.value = card
+                                selectedTableCards.value = emptyList()
+                            }
+                        },
+                        onTableCardClick = { tableCard: CardGui ->
+                            if (selectedCard.value != null) {
+                                val currentSelection = selectedTableCards.value.toMutableList()
+                                if (currentSelection.contains(tableCard)) {
+                                    currentSelection.remove(tableCard)
+                                } else {
+                                    currentSelection.add(tableCard)
+                                }
+                                selectedTableCards.value = currentSelection
+                            }
+                        },
+                        isChoosingStartCard = gameUiState.isChoosingStartCard,
+                        startCard = gameUiState.startCard,
+                        onChooseStartCard = { take ->
+                            gameViewModel.onUserChooseStartCard(take)
+                        }
+                    )
+
+                    // Game controls
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(16.dp)
+                    )
+                    {
+                        Button(
+                            onClick = { showInGameMenu.value = true }
+                        ) {
+                            Text(stringResource(R.string.options))
+                        }
+
+                    // Drop card button
+                    if (gameUiState.isPlayerTurn && gameViewModel.canDropCard(selectedCard.value, selectedTableCards.value)) {
+                        Spacer(modifier = Modifier.height(32.dp))
+                        Button(
+                            onClick = {
+                                selectedCard.value?.let { card ->
+                                    gameViewModel.playCard(card, selectedTableCards.value)
+                                    selectedCard.value = null // Reset selection after playing
+                                    selectedTableCards.value = emptyList() // Clear table card selection
+                                }
+                            }
+                        ) {
+                            Text("Play Card")
+                        }
+                    }
+                        }
+                    
+                    // Game status
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(32.dp)
                     ) {
-                        Text(stringResource(R.string.options))
+                        Text("Score: ${gameUiState.gameScore.first} - ${gameUiState.gameScore.second}")
+                        Text(gameUiState.gameMessage)
+                        if (!gameUiState.isPlayerTurn) {
+                            Text("Bot's turn...")
+                        }
+                        if (gameUiState.winner != null) {
+                            Text("Winner: ${gameUiState.winner}")
+                        }
                     }
                 }
             }

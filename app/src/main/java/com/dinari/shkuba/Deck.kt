@@ -14,11 +14,11 @@ class Deck {
     // JNI: Clean up C++ Deck instance
     private external fun nativeDestroy(handle: Long)
 
-    // JNI: Shuffle the deck (matches C++ shuffleDeck method)
-    external fun shuffle()
-
     // JNI: Deal a card (returns suit and rank as array, matches C++ draw method)
     external fun dealCard(): IntArray
+
+    // JNI: Get deck size (matches C++ getDeckSize method)
+    external fun getDeckSize(): Int
 
     protected fun finalize() {
         if (nativeHandle != 0L) {
@@ -28,8 +28,6 @@ class Deck {
     }
 
     companion object {
-        init {
-            System.loadLibrary("shkuba")
-        }
+        // Library loaded in MainActivity
     }
 }
