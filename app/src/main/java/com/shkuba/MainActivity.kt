@@ -31,7 +31,10 @@ import com.dinari.shkuba.MainMenu
 import com.dinari.shkuba.OptionsScreen
 import com.dinari.shkuba.Player
 import com.dinari.shkuba.R
+import com.dinari.shkuba.GameBot
+import com.dinari.shkuba.Round
 import com.dinari.shkuba.Suit
+import com.dinari.shkuba.createGameStateFromRound
 import com.shkuba.ui.PvpPlayerListScreen
 import com.shkuba.network.NetworkService
 
@@ -72,6 +75,10 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeState: MutableState<Locale>) {
     val showMenu = remember { mutableStateOf(true) }
     val showOptions = remember { mutableStateOf(false) }
+    
+    // Create native Round instance instead of hardcoded game state
+    val nativeRound = remember { mutableStateOf<Round?>(null) }
+    val gameBot = remember { mutableStateOf<GameBot?>(null) }
     val gameState = remember {
         mutableStateOf(
             GameState(
@@ -81,6 +88,7 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
             )
         )
     }
+    
     val showInGameMenu = remember { mutableStateOf(false) }
     val showPvpList = remember { mutableStateOf(false) }
     val supportedLanguages = listOf("English", "Hebrew", "Hindi")
@@ -117,22 +125,18 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
             showMenu.value -> {
                 MainMenu(
                     onStartGame = {
-                        val player = Player("You", listOf(
-                            CardGui("A", Suit.Spades),
-                            CardGui("7", Suit.Diamonds),
-                            CardGui("K", Suit.Clubs),
-                            CardGui("3", Suit.Hearts)
-                        ))
-                        val opponent = Player("Opponent", listOf())
-                        val tableCards = listOf(
-                            CardGui("2", Suit.Spades),
-                            CardGui("J", Suit.Diamonds)
-                        )
-                        gameState.value = GameState(
-                            players = listOf(player, opponent),
-                            tableCards = tableCards,
-                            currentPlayerIndex = 0
-                        )
+                        // Initialize native Round with P1 as first player
+                        val round = Round(Round.Player.P1)
+                        // Start first mini round - put start card on board (choice = false)
+                        round.firstMiniRound(false)
+                        nativeRound.value = round
+                        
+                        // Initialize the game bot
+                        val bot = GameBot()
+                        gameBot.value = bot
+                        
+                        // Create game state from native round
+                        gameState.value = createGameStateFromRound(round, 0)
                         showMenu.value = false
                     },
                     onOptions = { showOptions.value = true },
@@ -163,7 +167,34 @@ fun MainScreen(onExit: () -> Unit, isDarkMode: MutableState<Boolean>, localeStat
             }
             else -> {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    GameScreen(gameState = gameState.value, onPlayCard = { /* TODO: Play card logic */ })
+                    GameScreen(
+                        gameState = gameState.value, 
+                        onPlayCard = { card ->
+                            // Handle human player move
+                            nativeRound.value?.let { round ->
+                                // TODO: Implement actual card play logic using Round methods
+                                // For now, just refresh the game state
+                                
+                                // After human player moves, it's bot's turn
+                                if (gameState.value.currentPlayerIndex == 0) {
+                                    // Bot makes a move
+                                    gameBot.value?.let { bot ->
+                                        val botHand = round.getP2HandForBot()
+                                        val board = round.getBoardForBot()
+                                        
+                                        // Bot makes its move
+                                        bot.makeMove(botHand, board)
+                                        
+                                        // Update game state and switch to human player's turn
+                                        gameState.value = createGameStateFromRound(round, 0)
+                                    }
+                                } else {
+                                    // Switch back to human player
+                                    gameState.value = createGameStateFromRound(round, 0)
+                                }
+                            }
+                        }
+                    )
                     Button(
                         onClick = { showInGameMenu.value = true },
                         modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
